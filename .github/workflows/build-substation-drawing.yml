@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - "input/substation_layout.json"
+      - "generated/substation_layout.dxf"
+      - "generated/substation_layout.json"
       - "scripts/generate-layout.mjs"
       - ".github/workflows/build-substation-drawing.yml"
   workflow_dispatch:
