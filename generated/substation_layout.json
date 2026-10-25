@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source_app": "acad_substation",
-  "updated_at": "2026-10-25T15:04:50.658Z",
+  "updated_at": "2026-10-25T15:07:40.399Z",
   "sample_data": true,
   "drawing_path": "generated/substation_layout.dxf",
   "drawing_url": "https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf",
@@ -53,7 +53,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 1
+      "Row": 1,
+      "X_mm": 1000,
+      "Y_mm": 3000,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-02",
@@ -67,7 +70,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2
+      "Row": 2,
+      "X_mm": 1000,
+      "Y_mm": 9250,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-03",
@@ -81,7 +87,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3
+      "Row": 3,
+      "X_mm": 1000,
+      "Y_mm": 15500,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-04",
@@ -95,7 +104,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4
+      "Row": 4,
+      "X_mm": 1000,
+      "Y_mm": 21750,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-05",
@@ -109,7 +121,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 1
+      "Row": 1,
+      "X_mm": 2010,
+      "Y_mm": 3000,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-06",
@@ -123,7 +138,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2
+      "Row": 2,
+      "X_mm": 1810,
+      "Y_mm": 9250,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-07",
@@ -137,7 +155,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3
+      "Row": 3,
+      "X_mm": 1810,
+      "Y_mm": 15500,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-08",
@@ -151,7 +172,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4
+      "Row": 4,
+      "X_mm": 1810,
+      "Y_mm": 21750,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-09",
@@ -165,7 +189,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 1
+      "Row": 1,
+      "X_mm": 2820,
+      "Y_mm": 3000,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-10",
@@ -179,7 +206,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2
+      "Row": 2,
+      "X_mm": 2620,
+      "Y_mm": 9250,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-11",
@@ -193,7 +223,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3
+      "Row": 3,
+      "X_mm": 2620,
+      "Y_mm": 15500,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-12",
@@ -207,7 +240,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4
+      "Row": 4,
+      "X_mm": 2820,
+      "Y_mm": 21750,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-13",
@@ -221,7 +257,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 1
+      "Row": 1,
+      "X_mm": 3630,
+      "Y_mm": 3000,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-14",
@@ -235,7 +274,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2
+      "Row": 2,
+      "X_mm": 3430,
+      "Y_mm": 9250,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-15",
@@ -249,7 +291,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3
+      "Row": 3,
+      "X_mm": 3430,
+      "Y_mm": 15500,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-16",
@@ -263,7 +308,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4
+      "Row": 4,
+      "X_mm": 3630,
+      "Y_mm": 21750,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-17",
@@ -277,7 +325,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 1
+      "Row": 1,
+      "X_mm": 4440,
+      "Y_mm": 3000,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-18",
@@ -291,7 +342,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2
+      "Row": 2,
+      "X_mm": 4240,
+      "Y_mm": 9250,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-19",
@@ -305,7 +359,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3
+      "Row": 3,
+      "X_mm": 4440,
+      "Y_mm": 15500,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-20",
@@ -319,7 +376,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4
+      "Row": 4,
+      "X_mm": 4440,
+      "Y_mm": 21750,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-21",
@@ -333,7 +393,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 1
+      "Row": 1,
+      "X_mm": 5250,
+      "Y_mm": 3000,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-22",
@@ -347,7 +410,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2
+      "Row": 2,
+      "X_mm": 5050,
+      "Y_mm": 9250,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-23",
@@ -361,7 +427,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3
+      "Row": 3,
+      "X_mm": 5250,
+      "Y_mm": 15500,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-24",
@@ -375,7 +444,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4
+      "Row": 4,
+      "X_mm": 5250,
+      "Y_mm": 21750,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-25",
@@ -389,7 +461,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 1
+      "Row": 1,
+      "X_mm": 6060,
+      "Y_mm": 3000,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-26",
@@ -403,7 +478,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2
+      "Row": 2,
+      "X_mm": 6060,
+      "Y_mm": 9250,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-27",
@@ -417,7 +495,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3
+      "Row": 3,
+      "X_mm": 6060,
+      "Y_mm": 15500,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-28",
@@ -431,7 +512,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4
+      "Row": 4,
+      "X_mm": 6060,
+      "Y_mm": 21750,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-29",
@@ -445,7 +529,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 1
+      "Row": 1,
+      "X_mm": 6870,
+      "Y_mm": 3000,
+      "Out_Of_Bounds": false
     },
     {
       "Panel_ID": "PNL-30",
@@ -459,7 +546,10 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2
+      "Row": 2,
+      "X_mm": 6870,
+      "Y_mm": 9250,
+      "Out_Of_Bounds": false
     }
   ],
   "openings": [
@@ -509,8 +599,20 @@
     }
   ],
   "notes": [
-    "Illustrative sample dataset; replace with approved project data.",
+    "Checked-in illustrative sample layout used until a new input JSON or panel CSV is uploaded.",
     "DXF is an ASCII exchange drawing; open it in AutoCAD and save as DWG.",
-    "Not certified as construction-ready."
-  ]
-}
+    "Verify panel locations and clearances before engineering use.",
+    "Generated automatically by scripts/generate-layout.mjs when input/substation_layout.json changes.",
+    "DXF is an exchange drawing; open it in AutoCAD and save as native DWG.",
+    "Engineering review is required before use."
+  ],
+  "build": {
+    "panel_count": 30,
+    "cutout_count": 4,
+    "cutout_width_mm": 2000,
+    "cutout_total_mm": 8000,
+    "room_x_mm": 75000,
+    "room_y_mm": 25000,
+    "out_of_bounds_panels": []
+  }
+}\n
