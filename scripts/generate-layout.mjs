@@ -32,7 +32,7 @@ const placements = panels.map(p => {
 const pairs = (code, value) => String(code) + "\n" + String(value) + "\n";
 function line(x1,y1,x2,y2,layer){return pairs(0,"LINE")+pairs(8,layer)+pairs(10,x1)+pairs(20,y1)+pairs(30,0)+pairs(11,x2)+pairs(21,y2)+pairs(31,0);}
 function rect(x,y,w,h,layer){return line(x,y,x+w,y,layer)+line(x+w,y,x+w,y+h,layer)+line(x+w,y+h,x,y+h,layer)+line(x,y+h,x,y,layer);}
-function text(x,y,height,value,layer="TEXT"){return pairs(0,"TEXT")+pairs(8,layer)+pairs(10,x)+pairs(20,y)+pairs(30,0)+pairs(40,height)+pairs(1,String(value).replace(/[\\r\\n]/g," "));}
+function text(x,y,height,value,layer="TEXT"){return pairs(0,"TEXT")+pairs(8,layer)+pairs(10,x)+pairs(20,y)+pairs(30,0)+pairs(40,height)+pairs(1,String(value).replace(/[\r\n]/g," "));}
 const entities = [rect(0,0,roomX,roomY,"WALL"), text(roomX/2,roomY+600,250,(settings.projectName || "SUBSTATION")+" - PLAN")];
 for(let i=0;i<n;i++){const y=i*(lane+cutW);entities.push(rect(0,y,roomX,cutW,"CUTOUT"),text(roomX/2,y+cutW/2,180,"CUTOUT "+(i+1)+" - "+cutW+" mm","CUTOUT"));}
 for(const p of placements){entities.push(rect(p.X_mm,p.Y_mm,p.Width_mm,p.Depth_mm,"PANEL"),text(p.X_mm+p.Width_mm/2,p.Y_mm+p.Depth_mm/2,Math.max(80,Math.min(150,p.Width_mm/6)),p.Panel_ID+" R"+p.Row));}
