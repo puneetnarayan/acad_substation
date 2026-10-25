@@ -108,7 +108,7 @@ function calculatePlacements(s){
   const y=cutN?base+(cutW-d)/2:2000+(assignedRow-1)*(lane+cutW)+(lane-d)/2;
   const x=s.direction==="-x"?s.roomX-cursor-w:cursor;
   placements.push({id:p.id||"Panel "+(i+1),row:assignedRow,x,y,w,d,front:Math.max(0,+p.front||0),rear:Math.max(0,+p.rear||0),raw:p,categoryGap:usedOnRow?interGap:0});
-  cursor+=w+gap;usedOnRow++;prevCategory=cat;
+  cursor+=w;usedOnRow++;prevCategory=cat;
  });
  return {placements,lane,cutN,cutW,rowCount:count};
 }
