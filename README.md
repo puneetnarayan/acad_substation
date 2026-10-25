@@ -18,10 +18,10 @@ GitHub Actions runs `scripts/generate-layout.mjs` when `input/substation_layout.
 In the web app, upload a panel CSV or exported project JSON, then use **Publish latest to GitHub**. First use requires a GitHub fine-grained token with **Contents: Read and write** permission scoped only to `puneetnarayan/acad_substation`. The static app holds the token in the current browser tab session only; it is never committed to the repository. Once connected in that tab, project edits and new uploads schedule publication automatically. The workflow then rebuilds the stable artifacts.
 
 ## In-app drawing preview and PDF
-- Open **Plan preview** to inspect the current master layout directly in the app.
-- Use **Zoom in**, **Zoom out**, and **Fit drawing** to inspect details.
-- **Export A3 Landscape PDF** opens a print-ready vector drawing. Choose **Save as PDF** in the browser print dialog and confirm paper size A3 and orientation Landscape.
-- The preview is rendered from the same current project model used by the DXF generator; it updates when layout inputs change. The PDF is vector-based for sharp lines/text. It is a review output, not a substitute for checking the generated DXF/DWG in AutoCAD.
+- The app opens on the live plan preview so the drawing is immediately visible.
+- Use **Zoom in**, **Zoom out**, **Fit drawing**, mouse-wheel zoom, and drag-to-pan for inspection.
+- **Export A3 Landscape PDF** downloads a vector PDF directly; it does not require a print dialog. The page uses A3 landscape dimensions (420 × 297 mm) and includes the room plan, panel labels, dimensions, AHU reservation, openings, bus ducts and a compact panel schedule.
+- The preview and PDF use the current layout model and refresh when layout inputs change. The PDF is vector-based (not a screenshot), so its linework stays sharp when magnified. It remains a review output, not a substitute for checking the generated DXF/DWG in AutoCAD.
 
 ## Master drawing rule
 The ACAD layout is the physical-layout master. Cable route definition and cable scheduling must reference reviewed panel coordinates, room geometry, openings, cut-outs and busducts from this layout. Do not infer routes from sample data or treat the illustrative committed DXF as an approved project drawing. The cable app must keep unresolved geometry/route inputs flagged until they are supplied and reviewed.
