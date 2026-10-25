@@ -29,7 +29,7 @@ const placements = panels.map(p => {
   rowCursor.set(row, cursor + width + gap);
   return { ...p, X_mm: x, Y_mm: y, Out_Of_Bounds: x < 0 || y < 0 || x + width > roomX || y + depth > roomY };
 });
-const pairs = (code, value) => String(code) + "\\n" + String(value) + "\\n";
+const pairs = (code, value) => String(code) + "\n" + String(value) + "\n";
 function line(x1,y1,x2,y2,layer){return pairs(0,"LINE")+pairs(8,layer)+pairs(10,x1)+pairs(20,y1)+pairs(30,0)+pairs(11,x2)+pairs(21,y2)+pairs(31,0);}
 function rect(x,y,w,h,layer){return line(x,y,x+w,y,layer)+line(x+w,y,x+w,y+h,layer)+line(x+w,y+h,x,y+h,layer)+line(x,y+h,x,y,layer);}
 function text(x,y,height,value,layer="TEXT"){return pairs(0,"TEXT")+pairs(8,layer)+pairs(10,x)+pairs(20,y)+pairs(30,0)+pairs(40,height)+pairs(1,String(value).replace(/[\\r\\n]/g," "));}
@@ -46,5 +46,5 @@ dxf+=pairs(0,"ENDTAB")+pairs(0,"ENDSEC")+pairs(0,"SECTION")+pairs(2,"ENTITIES")+
 const output = { ...raw, schema_version: 1, source_app:"acad_substation", updated_at:new Date().toISOString(), drawing_path:"generated/substation_layout.dxf", drawing_url:"https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf", panels:placements, build:{panel_count:placements.length,cutout_count:n,cutout_width_mm:cutW,cutout_total_mm:n*cutW,room_x_mm:roomX,room_y_mm:roomY,out_of_bounds_panels:placements.filter(p=>p.Out_Of_Bounds).map(p=>p.Panel_ID)}, notes:[...(raw.notes||[]),"Generated automatically by scripts/generate-layout.mjs when input/substation_layout.json changes.","DXF is an exchange drawing; open it in AutoCAD and save as native DWG.","Engineering review is required before use."] };
 fs.mkdirSync(path.dirname(outDxf), { recursive: true });
 fs.writeFileSync(outDxf,dxf,"utf8");
-fs.writeFileSync(outJson,JSON.stringify(output,null,2)+"\\n","utf8");
+fs.writeFileSync(outJson,JSON.stringify(output,null,2)+"\n","utf8");
 console.log(`Generated DXF with ${placements.length} panels; out-of-bounds: ${output.build.out_of_bounds_panels.length}`);
