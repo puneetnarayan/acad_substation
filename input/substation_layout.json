@@ -511,6 +511,7 @@
   "notes": [
     "Checked-in illustrative sample layout used until a new input JSON or panel CSV is uploaded.",
     "DXF is an ASCII exchange drawing; open it in AutoCAD and save as DWG.",
-    "Verify panel locations and clearances before engineering use."
+    "Verify panel locations and clearances before engineering use.",
+    "Default source sample refreshed to rebuild DXF after label-sanitization fix."
   ]
 }
