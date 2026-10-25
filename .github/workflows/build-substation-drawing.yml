@@ -1,0 +1,35 @@
+name: Build Substation Drawing
+on:
+  push:
+    branches: [main]
+    paths:
+      - "input/substation_layout.json"
+      - "scripts/generate-layout.mjs"
+      - ".github/workflows/build-substation-drawing.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: generated-substation-drawing
+  cancel-in-progress: false
+jobs:
+  build-drawing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate DXF and JSON sidecar
+        run: node scripts/generate-layout.mjs
+      - name: Commit generated artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add generated/substation_layout.dxf generated/substation_layout.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Build substation drawing from latest input"
+            git push
+          else
+            echo "Generated artifacts already match source input."
+          fi
