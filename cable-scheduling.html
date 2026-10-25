@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123a5a">
+  <title>Cable Scheduling & Tray Allocation</title>
+  <style>
+    :root{--navy:#425c76;--blue:#8db9d1;--pale:#edf4f8;--line:#dce5eb;--ink:#344657;--muted:#7a8997;--orange:#fce4d6;--green:#e3f1e7;--white:#fff;--lav:#f0eef9;--mint:#eaf5ef}
+    *{box-sizing:border-box}body{margin:0;font:13px/1.35 "Segoe UI",Arial,sans-serif;color:var(--ink);background:#f7f9fb}
+    .app{min-height:100vh;display:flex}.sidebar{width:224px;flex:0 0 224px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;transition:width .2s,flex-basis .2s;position:sticky;top:0;height:100vh;overflow:auto}
+    .sidebar.collapsed{width:58px;flex-basis:58px}.side-head{height:54px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
+    button{font:inherit;cursor:pointer}.icon-btn{border:1px solid var(--line);background:#f8fafc;border-radius:7px;width:30px;height:30px;font-size:16px;color:var(--navy);flex-shrink:0}.brand{font-weight:750;color:var(--navy);white-space:nowrap;font-size:13px}.pin{margin-left:auto;font-size:14px}.sidebar.collapsed .brand,.sidebar.collapsed .pin,.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-group-title{display:none}
+    .nav{padding:7px}.nav-group-title{font-size:9px;letter-spacing:1px;color:#91a0ac;padding:10px 8px 4px;text-transform:uppercase}.nav-item{display:flex;align-items:center;gap:9px;padding:8px 8px;border-radius:7px;color:#526577;text-decoration:none;margin:1px 0;white-space:nowrap;font-size:12px}.nav-item:hover,.nav-item.active{background:#edf4f8;color:#425c76;font-weight:650}.nav-icon{width:20px;text-align:center;font-size:15px;flex-shrink:0}.side-foot{margin-top:auto;padding:10px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}
+    .main{min-width:0;flex:1}.topbar{height:54px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:10px}.eyebrow{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}.top-title{font-size:16px;font-weight:750;color:var(--navy)}.status{border:1px solid #e6e0cf;background:#fbf7ed;color:#8a7a56;padding:4px 8px;border-radius:18px;font-size:10px;white-space:nowrap}
+    .content{padding:16px;max-width:1800px;margin:auto}.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.page-head h1{margin:0 0 2px;color:var(--navy);font-size:20px}.page-head p{margin:0;color:var(--muted);font-size:11px}.actions{display:flex;gap:5px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 9px;color:var(--navy);font-size:11px;font-weight:600}.btn:hover{background:#f0f5f8}.btn.primary{background:#dcebf4;color:#385a73;border-color:#c9dce8}
+    .flagged-cell{background:#fce4d6!important;color:#8b2f20;font-weight:600}.flagged-cell::after{content:" ⚑";font-size:9px}.notice{background:#f7f3e8;border:1px solid #eee4c9;padding:7px 10px;border-radius:7px;margin-bottom:10px;color:#776c51;font-size:11px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:10px}.card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px;min-width:0}.metric-label{font-size:10px;color:var(--muted)}.metric-value{font-size:23px;font-weight:750;color:var(--navy);margin:2px 0}.metric-note{font-size:10px;color:var(--muted)}.section-title{font-size:13px;color:var(--navy);font-weight:750;margin:0 0 8px}.split{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.table-wrap{overflow:auto;max-height:calc(100vh - 230px)}table{border-collapse:separate;border-spacing:0;width:100%;font-size:11px}th{background:#edf2f7;color:#526b80;text-align:left;font-weight:700;position:sticky;top:0;z-index:1}th,td{padding:6px 7px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);white-space:nowrap}th:first-child,td:first-child{border-left:1px solid var(--line)}thead th{border-top:1px solid var(--line)}tbody tr:nth-child(even){background:#fafcfd}tbody tr:hover{background:#f1f7fa}td.empty{color:#8997a3;font-style:italic}.pill{display:inline-block;border-radius:14px;padding:2px 6px;font-size:10px;background:#eef2f5}.pill.pending{background:#fff0d7;color:#8b5a11}.pill.good{background:var(--green);color:#37632b}.progress{height:6px;background:#e8eef2;border-radius:9px;overflow:hidden;min-width:80px}.progress span{display:block;height:100%;background:#a8cbdc;width:0}.tier-list{display:grid;gap:5px}.tier{display:grid;grid-template-columns:48px 1fr 58px;gap:7px;align-items:center;font-size:11px}.tier-track{height:14px;border-radius:4px;background:#edf1f4;overflow:hidden}.tier-fill{height:100%;background:#b8d8e5;border-right:2px solid #7ba7bb}.muted{color:var(--muted)}.empty-state{padding:18px 12px;text-align:center;color:var(--muted);border:1px dashed #c8d6e0;border-radius:8px;background:#fbfdfe;font-size:11px}.footer-note{font-size:10px;color:var(--muted);margin-top:10px}
+    /* Compact engineering dashboard */
+    .content{padding:9px 12px}.page-head{margin-bottom:7px;gap:8px}.page-head h1{font-size:17px}.page-head p{font-size:10px}
+    .notice{padding:5px 8px;margin-bottom:7px;font-size:10px}.grid{gap:7px;margin-bottom:7px}.card{padding:8px;border-radius:7px}
+    .metric-value{font-size:20px;margin:1px 0}.section-title{margin-bottom:5px;font-size:12px}.actions{gap:4px}.btn{padding:4px 7px;font-size:10px}
+    .table-wrap{max-height:calc(100vh - 175px)}.footer-note{margin-top:6px}
+    @media(max-width:1050px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}}@media(max-width:650px){.sidebar{width:58px;flex-basis:58px}.sidebar .brand,.sidebar .pin,.sidebar .nav-label,.sidebar .nav-group-title{display:none}.content{padding:10px}.topbar{padding:0 10px}.top-title{font-size:14px}.status{display:none}.grid{gap:6px}.card{padding:9px}.metric-value{font-size:20px}}
+    @media(max-width:1050px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}}@media(max-width:650px){.sidebar{width:72px;flex-basis:72px}.sidebar .brand,.sidebar .pin,.sidebar .nav-label,.sidebar .nav-group-title{display:none}.content{padding:15px}.topbar{padding:0 15px}.top-title{font-size:16px}.status{display:none}.grid{gap:9px}.card{padding:12px}.metric-value{font-size:23px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-head">
+      <button class="icon-btn" id="hamburger" aria-label="Toggle sidebar" title="Collapse/expand sidebar">☰</button>
+      <div class="brand">Cable Engineering</div>
+      <button class="icon-btn pin" id="pin" aria-label="Pin sidebar" title="Pin sidebar">📌</button>
+    </div>
+    <nav class="nav" aria-label="Main navigation">
+      <div class="nav-group-title">Workspace</div>
+      <a class="nav-item active" href="#dashboard" data-page="Dashboard"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="#project" data-page="Project Setup"><span class="nav-icon">⚙</span><span class="nav-label">Project Setup</span></a>
+      <a class="nav-item" href="#layout" data-page="Substation Layout"><span class="nav-icon">⌗</span><span class="nav-label">Substation Layout</span></a>
+      <a class="nav-item" href="#electrical" data-page="Electrical Configuration"><span class="nav-icon">⚡</span><span class="nav-label">Electrical Configuration</span></a>
+      <a class="nav-item" href="#feeders" data-page="Feeder & Cable Generation"><span class="nav-icon">⇢</span><span class="nav-label">Feeder & Cable Generation</span></a>
+      <a class="nav-item" href="#drawing" data-page="Drawing & Layout Inputs"><span class="nav-icon">▧</span><span class="nav-label">Drawing & Layout Inputs</span></a>
+      <div class="nav-group-title">Engineering data</div>
+      <a class="nav-item" href="#equipment" data-page="Equipment Master"><span class="nav-icon">▤</span><span class="nav-label">Equipment Master</span></a>
+      <a class="nav-item" href="#cablespecs" data-page="Cable Specifications"><span class="nav-icon">◉</span><span class="nav-label">Cable Specifications</span></a>
+      <a class="nav-item" href="#schedule" data-page="Cable Schedule"><span class="nav-icon">☷</span><span class="nav-label">Cable Schedule</span></a>
+      <a class="nav-item" href="#routes" data-page="Route Definition"><span class="nav-icon">↗</span><span class="nav-label">Route Definition</span></a>
+      <a class="nav-item" href="#trays" data-page="Cable Tray Master"><span class="nav-icon">▱</span><span class="nav-label">Cable Tray Master</span></a>
+      <a class="nav-item" href="#allocation" data-page="Tray Allocation"><span class="nav-icon">⇄</span><span class="nav-label">Tray Allocation</span></a>
+      <a class="nav-item" href="#crosssections" data-page="Tray Cross Sections"><span class="nav-icon">▥</span><span class="nav-label">Tray Cross Sections</span></a>
+      <div class="nav-group-title">Reports & controls</div>
+      <a class="nav-item" href="#reports" data-page="Reports & Exports"><span class="nav-icon">▧</span><span class="nav-label">Reports & Exports</span></a>
+      <a class="nav-item" href="#rules" data-page="Engineering Rules"><span class="nav-icon">✓</span><span class="nav-label">Engineering Rules</span></a>
+      <a class="nav-item" href="#history" data-page="Change History"><span class="nav-icon">◷</span><span class="nav-label">Change History</span></a>
+    </nav>
+    <div class="side-foot">Prototype UI · Engineering checks not yet implemented</div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><div class="eyebrow">Steel plant · Substation engineering</div><div class="top-title" id="topTitle">Cable Scheduling & Tray Allocation</div></div><div class="status">● Prototype · Not for construction</div></header>
+    <section class="content" id="pageContent">
+      <div class="page-head"><div><h1>Engineering Dashboard</h1><p>Project overview, cable data readiness and tray allocation status.</p></div><div class="actions"><button class="btn" id="downloadSampleBtn">Download Sample Excel</button><button class="btn" id="loadSampleBtn">Load Sample Data</button><button class="btn" id="importExcelBtn">Import Excel</button><button class="btn" id="clearDataBtn">Clear Data</button><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden><input id="drawingFile" type="file" accept=".dwg,.dxf,.pdf,.png,.jpg,.jpeg,.tif,.tiff,.xlsx,.xls,.csv,.json" hidden><button class="btn primary" id="newProjectBtn">Project Setup</button></div></div>
+      <div class="notice"><strong>Sample data mode.</strong> Select “Load Sample Data” to explore illustrative cable and tray records, or download the sample Excel workbook. All sample values are for demonstration only and are not approved engineering data.</div>
+      <div class="grid">
+        <div class="card"><div class="metric-label">Cable records</div><div class="metric-value" id="cableCount">0</div><div class="metric-note">Sample cable records</div></div>
+        <div class="card"><div class="metric-label">Equipment / panels</div><div class="metric-value" id="equipmentCount">0</div><div class="metric-note">Sample equipment records</div></div>
+        <div class="card"><div class="metric-label">Tray routes</div><div class="metric-value" id="routeCount">0</div><div class="metric-note">Sample route records</div></div>
+        <div class="card"><div class="metric-label">Tray tiers</div><div class="metric-value">Up to 10</div><div class="metric-note">Configurable project limit</div></div>
+      </div>
+      <div class="card" style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h2 class="section-title" style="margin:0">Engineering Data Validation</h2><button class="btn" id="downloadValidationReport">Download Validation Report (CSV)</button></div>
+        <p class="muted">Checks are recalculated when sample data is loaded, cleared, or imported. Missing inputs are marked Not Evaluated rather than treated as a pass.</p>
+        <div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-top:12px">
+          <div><div class="metric-label">Pass</div><div class="metric-value" id="validationPass">0</div></div>
+          <div><div class="metric-label">Warnings</div><div class="metric-value" id="validationWarning">0</div></div>
+          <div><div class="metric-label">Failures</div><div class="metric-value" id="validationFail">0</div></div>
+          <div><div class="metric-label">Not evaluated</div><div class="metric-value" id="validationNE">0</div></div>
+        </div>
+        <div class="table-wrap"><table id="validationTable"><thead><tr><th>Check</th><th>Status</th><th>Finding / action</th></tr></thead><tbody><tr><td colspan="3" class="empty">Validation will run when data are loaded.</td></tr></tbody></table></div>
+      </div>
+      <div class="split">
+        <div class="card"><h2 class="section-title">Sample tray allocation preview</h2><div class="table-wrap"><table id="sampleTable"><thead><tr><th>Tray ID</th><th>Type</th><th>Width (mm)</th><th>Used (mm)</th><th>Occupancy</th><th>Cables</th></tr></thead><tbody><tr><td colspan="6" class="empty">Click “Load Sample Data”.</td></tr></tbody></table></div><h2 class="section-title" style="margin-top:18px">Data readiness</h2><div class="table-wrap"><table><thead><tr><th>Data group</th><th>Status</th><th>Next step</th></tr></thead><tbody>
+          <tr><td>Equipment & panel master</td><td><span class="pill pending">Awaiting input</span></td><td>Import / enter panels</td></tr>
+          <tr><td>Cable specifications</td><td><span class="pill pending">Awaiting input</span></td><td>Confirm approved sizes</td></tr>
+          <tr><td>Cable schedule</td><td><span class="pill pending">Awaiting input</span></td><td>Enter source and destination</td></tr>
+          <tr><td>Tray routes & segments</td><td><span class="pill pending">Awaiting input</span></td><td>Define physical routes</td></tr>
+          <tr><td>Engineering rules</td><td><span class="pill pending">To be configured</span></td><td>Review project-specific rules</td></tr>
+        </tbody></table></div></div>
+        <div class="card"><h2 class="section-title">Tier occupancy preview</h2><p class="muted">Illustrative display only. Widths and occupancy will be calculated from verified cable/tray data.</p><div class="tier-list" id="tiers"></div><div class="footer-note">Maximum 10 tiers. Missing diameter or loading data will be flagged as unevaluated—not assumed to pass.</div></div>
+      </div>
+      <div class="footer-note">Design principle: preserve approved allocations; show optimisation proposals separately. Original uploaded drawings will remain unchanged.</div>
+    </section>
+  </main>
+</div>
+<script>
+const SUBSTATION_LAYOUT_JSON_URL='https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.json';
+const SUBSTATION_LAYOUT_DXF_URL='https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf';
+let latestSubstationLayout=null,latestSubstationLayoutStatus='Loading published sample layout…';
+async function refreshDrawingAvailability(){
+  const box=document.getElementById('drawingAvailabilityStatus'); if(!box)return;
+  box.textContent='Checking GitHub for the published DXF and layout JSON…';
+  const checks=await Promise.all([
+    fetch(SUBSTATION_LAYOUT_DXF_URL+'?check='+Date.now(),{method:'HEAD',cache:'no-store'}).then(r=>({ok:r.ok,status:r.status})).catch(()=>({ok:false,status:'network/CORS'})),
+    fetch(SUBSTATION_LAYOUT_JSON_URL+'?check='+Date.now(),{cache:'no-store'}).then(async r=>({ok:r.ok,status:r.status,payload:r.ok?await r.json():null})).catch(()=>({ok:false,status:'network/CORS',payload:null}))
+  ]);
+  const dxf=checks[0],json=checks[1];
+  if(!box.isConnected)return;
+  if(dxf.ok && json.ok){
+    const sample=!!json.payload?.sample_data;
+    renderPublishedLayoutPreview(json.payload);
+    box.innerHTML='<span class="pill good">DXF available</span> <span class="pill '+(sample?'pending':'good')+'">'+(sample?'Illustrative sample drawing':'Published project drawing')+'</span><br><span class="muted">Repository: puneetnarayan/acad_substation · generated/substation_layout.dxf. '+(sample?'The committed drawing currently uses sample layout inputs; replace them with approved project data.':'Latest published layout JSON is available. Verify the drawing before routing.')+'</span>';
+  } else {
+    box.innerHTML='<span class="pill pending">Availability not confirmed from this browser</span><br><span class="muted">Open the repository folder to inspect current files. HTTP/network restrictions can prevent the live check.</span>';
+  }
+}
+function renderPublishedLayoutPreview(payload){
+  const host=document.getElementById('publishedLayoutPreview'); if(!host)return;
+  const sample=!!payload?.sample_data;
+  const updated=String(payload?.updated_at||'timestamp unavailable').replace(/[<>&"]/g,'');
+  host.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px"><div><strong style="font-size:12px;color:var(--navy)">ACAD Substation drawing — source app view</strong><div class="muted" style="font-size:10px">Repository JSON updated: '+updated+' · '+(sample?'ILLUSTRATIVE SAMPLE':'PROJECT LAYOUT')+'</div></div><div class="actions"><button class="btn primary" id="refreshEmbeddedAcad">Refresh drawing</button><a class="btn" href="https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf?download='+Date.now()+'" download="substation_layout.dxf" target="_blank" rel="noopener">Download DXF</a></div></div><div style="border:1px solid var(--line);border-radius:7px;overflow:hidden;background:#f5f7f8"><iframe id="embeddedAcadStudio" title="ACAD Substation Layout Studio" src="https://acad-substation.vercel.app/?published=1&refresh='+Date.now()+'" loading="eager" style="display:block;width:100%;height:620px;border:0;background:#f5f7f8"></iframe></div><div class="muted" style="font-size:10px;margin-top:4px">Refresh reloads the latest published JSON into the embedded ACAD Studio. Use its Export A3 Landscape PDF control for the source drawing\'s colours and orientation.</div>';
+  const refresh=document.getElementById('refreshEmbeddedAcad');if(refresh)refresh.addEventListener('click',async()=>{refresh.disabled=true;refresh.textContent='Refreshing…';const status=document.getElementById('drawingAvailabilityStatus');try{await loadPublishedSubstationLayout(false);const frame=document.getElementById('embeddedAcadStudio');if(frame)frame.src='https://acad-substation.vercel.app/?published=1&refresh='+Date.now();if(status)status.innerHTML='<span class="pill good">Latest published layout refreshed</span> <span class="muted">'+new Date().toLocaleTimeString()+'</span>';}catch(e){if(status)status.textContent='Refresh failed: '+e.message;}finally{refresh.disabled=false;refresh.textContent='Refresh drawing';}});
+}
+
+async function loadPublishedSubstationLayout(showAlert=false){
+  const url=SUBSTATION_LAYOUT_JSON_URL+'?cache='+Date.now();
+  const response=await fetch(url,{cache:'no-store'});
+  if(!response.ok)throw new Error('HTTP '+response.status+' while reading '+SUBSTATION_LAYOUT_JSON_URL);
+  const payload=await response.json();
+  if(!payload||!Array.isArray(payload.panels)||!payload.settings)throw new Error('Layout JSON must contain settings and a panels array.');
+  latestSubstationLayout=payload;
+  renderPublishedLayoutPreview(payload);
+  latestSubstationLayoutStatus=payload.sample_data?'Published sample layout loaded':'Latest published layout loaded';
+  const stamp=payload.updated_at?new Date(payload.updated_at).toLocaleString():'timestamp not supplied';
+  const panelRows=payload.panels.map((p,i)=>({
+    Layout_Reference_ID:'SUBSTATION-'+(p.Panel_ID||p.id||i+1),
+    Panel_ID:p.Panel_ID||p.id||('PANEL-'+(i+1)),
+    Panel_Tag:p.Tag||p.Panel_Tag||p.Panel_ID||p.id||('PANEL-'+(i+1)),
+    Panel_Type:p.Panel_Type||p.type||'',
+    Service:p.Service||p.service||'',
+    Row:p.Row||p.row||'',
+    X_mm:p.X_mm??p.x??'',
+    Y_mm:p.Y_mm??p.y??'',
+    Width_mm:p.Width_mm??p.width??'',
+    Depth_mm:p.Depth_mm??p.depth??'',
+    Height_mm:p.Height_mm??p.height??'',
+    Source_File:'generated/substation_layout.json',
+    Source_App:'ACAD Substation Layout Studio',
+    Drawing_URL:SUBSTATION_LAYOUT_DXF_URL,
+    Layout_Updated_At:stamp,
+    Processing_Status:'STRUCTURED LAYOUT LOADED — verify drawing before route use',
+    Review_Status:'PENDING'
+  }));
+  sampleData.Panel_Layout=panelRows;
+  // ACAD Substation is the master source for layout-derived engineering data.
+  // Tray row count follows ACAD's cutoutCount exactly; no tray capacity is guessed.
+  const settings=payload.settings||{};
+  const numOr=(v,fallback=0)=>Number.isFinite(Number(v))?Number(v):fallback;
+  const substationCount=Math.max(1,numOr(settings.substationCount,1));
+  const cutoutRows=Math.max(0,Math.min(100,Math.floor(numOr(settings.cutoutCount,0))));
+  const priorTrays=Array.isArray(sampleData.Tray_Master)?sampleData.Tray_Master:[];
+  const priorById=new Map(priorTrays.map(t=>[String(t.Tray_ID||''),t]));
+  sampleData.Tray_Master=Array.from({length:cutoutRows},(_,i)=>{
+    const id='ACAD-TRAY-ROW-'+String(i+1).padStart(2,'0');
+    const prior=priorById.get(id)||{};
+    return {...prior,Tray_ID:id,Tray_Type:prior.Tray_Type||'To be specified',
+      Row:i+1,Substation_Count:substationCount,
+      Cutout_Row:i+1,Cutout_Width_mm:numOr(settings.cutoutWidth,0),
+      Room_Length_mm:numOr(settings.roomX,0),Room_Depth_mm:numOr(settings.roomY,0),
+      Source_App:'acad_substation',Source_File:'generated/substation_layout.json',
+      Layout_Updated_At:stamp,Master_Data_Status:'Derived from ACAD Substation',
+      Review_Status:'PENDING — specify tray width, type, capacity and route'};
+  });
+  sampleData.Project_Settings=[
+    {Setting:'Master_Data_Source',Value:'puneetnarayan/acad_substation · generated/substation_layout.json'},
+    {Setting:'Project_Name',Value:settings.projectName||settings.plantName||''},
+    {Setting:'Plant_Name',Value:settings.plantName||''},
+    {Setting:'Number_of_Substations',Value:substationCount},
+    {Setting:'Panel_Rows',Value:numOr(settings.panelRows,0)},
+    {Setting:'Cutout_Rows',Value:cutoutRows},
+    {Setting:'Cutout_Width_mm',Value:numOr(settings.cutoutWidth,0)},
+    {Setting:'Room_Length_X_mm',Value:numOr(settings.roomX,0)},
+    {Setting:'Room_Depth_Y_mm',Value:numOr(settings.roomY,0)},
+    {Setting:'Building_Configuration',Value:settings.buildingConfig||''},
+    {Setting:'ACAD_Layout_Updated_At',Value:stamp},
+    {Setting:'Data_Status',Value:payload.sample_data?'ACAD master contains illustrative sample data — verify before engineering use':'Loaded from published ACAD master data — engineering review required'}
+  ];
+  const acadEquipment=panelRows.map(p=>({
+    Equipment_ID:p.Panel_ID,Engineering_Tag:p.Panel_Tag,Equipment_Type:p.Panel_Type||'Panel',
+    Service:p.Service,Row:p.Row,Area:settings.projectName||settings.plantName||'',
+    Source_App:'acad_substation',Source_File:'generated/substation_layout.json',
+    Layout_Updated_At:stamp,Review_Status:'PENDING'
+  }));
+  sampleData.Switchboard_Panels=acadEquipment;
+  const otherEquipment=(Array.isArray(sampleData.Equipment_Master)?sampleData.Equipment_Master:[])
+    .filter(e=>!String(e.Source_App||'').includes('acad_substation'));
+  sampleData.Equipment_Master=[...otherEquipment,...acadEquipment];
+  if(['Drawing & Layout Inputs','Substation Layout'].includes(document.getElementById('topTitle')?.textContent))renderModule(document.getElementById('topTitle').textContent);
+  if(document.getElementById('topTitle')?.textContent==='Cable Tray Master')renderModule('Cable Tray Master');
+  if(showAlert)alert('Loaded '+panelRows.length+' panel records from the latest published layout JSON. Drawing link: '+SUBSTATION_LAYOUT_DXF_URL+'\nThese coordinates are reference data only until engineering review.');
+  return payload;
+}
+(() => {
+  const sidebar = document.getElementById('sidebar');
+  const hamburger = document.getElementById('hamburger');
+  const pin = document.getElementById('pin');
+  let pinned = true;
+  hamburger.addEventListener('click', () => {
+    if (pinned) pinned = false;
+    sidebar.classList.toggle('collapsed');
+    pin.textContent = sidebar.classList.contains('collapsed') ? '📍' : '📌';
+  });
+  pin.addEventListener('click', () => {
+    pinned = !pinned;
+    pin.title = pinned ? 'Pinned open' : 'Unpinned';
+    pin.textContent = pinned ? '📌' : '📍';
+    if (pinned) sidebar.classList.remove('collapsed');
+  });
+  function renderModule(page) {
+    const map = {
+      'Equipment Master':'Equipment_Master','Cable Specifications':'Cable_Spec_Master',
+      'Cable Schedule':'Cable_Schedule','Route Definition':'Route_Master',
+      'Cable Tray Master':'Tray_Master','Project Setup':'Project_Settings',
+      'Substation Layout':'Panel_Layout','Tray Allocation':'Tray_Master',
+      'Tray Cross Sections':'Tray_Master','Reports & Exports':'Cable_Schedule',
+      'Engineering Rules':'Segregation_Rules','Change History':'Project_Settings',
+      'Equipment Rows':'Equipment_Rows','Route Segments':'Route_Segments','Electrical Configuration':'Electrical_System_Config','Feeder & Cable Generation':'Feeder_Register','Drawing & Layout Inputs':'Panel_Layout'
+    };
+    const sheet = map[page];
+    const rows = sampleData[sheet] || [];
+    const keys = rows.length ? Object.keys(rows[0]) : [];
+    const table = rows.length ? '<div class="table-wrap"><table><thead><tr>'+keys.map(k=>'<th>'+escapeHtml(k)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+keys.map(k=>{const v=r[k];const blank=v===undefined||v===null||String(v).trim()==='';return '<td class="'+(blank?'flagged-cell':'')+'" title="'+(blank?'Missing input — requires review':'')+'">'+(blank?'MISSING':escapeHtml(String(v)))+'</td>';}).join('')+'</tr>').join('')+'</tbody></table></div>' : '<div class="empty-state">No sample records are available for this module yet. Import a workbook or load sample data.</div>';
+    const descriptions = {
+      'Substation Layout':'Loads the latest published panel layout from ACAD Substation Layout Studio, with stable links to the shared DXF drawing and JSON sidecar.',
+      'Tray Allocation':'Propose assignments only when cable outside diameter, route-to-tray candidates and usable tray capacity are supplied. Existing assignments are preserved; unresolved cables remain unevaluated.',
+      'Tray Cross Sections':'Tier and tray-width preview. Width utilisation figures are illustrative and not engineering-validated.',
+      'Reports & Exports':'Review sample cable records and download the sample workbook.',
+      'Engineering Rules':'Rules need project-specific engineering review before they can be treated as approved.',
+      'Change History':'Basic project settings are shown here; revision history will be implemented separately.',
+      'Electrical Configuration':'Configure the distribution topology. Missing inputs are highlighted light red.',
+      'Feeder & Cable Generation':'Generate provisional power-cable rows from the feeder register. All generated rows require review.',
+      'Drawing & Layout Inputs':'Automatically loads the latest published substation layout JSON and offers a stable link to the generated DXF drawing. Sample drawing is used whenever no newer file is published.'
+    };
+    document.getElementById('topTitle').textContent=page;
+    document.getElementById('pageContent').innerHTML='<div class="page-head"><div><h1>'+escapeHtml(page)+'</h1><p>'+escapeHtml(descriptions[page] || 'Review and validate the records loaded into this workspace.')+'</p></div><div class="actions"><button class="btn" id="moduleDownload">Download Excel</button>'+(page==='Feeder & Cable Generation' ? '<button class="btn primary" id="generateDraftCables">Generate Draft Cables</button>' : '')+(page==='Tray Allocation' ? '<button class="btn primary" id="runTrayAllocation">Propose Tray Allocation</button><button class="btn" id="downloadAllocationReport">Download Allocation CSV</button>' : '')+(page==='Drawing & Layout Inputs' || page==='Substation Layout' ? '<button class="btn" id="layoutInputHelp">Supported Inputs</button><button class="btn primary" id="loadPublishedLayout">Refresh latest layout</button><a class="btn" href="https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf" target="_blank" rel="noopener">Open latest DXF</a><a class="btn" href="https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.json" target="_blank" rel="noopener">Open layout JSON</a><button class="btn" id="addDrawingReference">Add Drawing / Layout</button>' : '')+'<button class="btn" id="backDashboard">Dashboard</button></div></div>'+(page==='Drawing & Layout Inputs'||page==='Substation Layout' ? '<div class="card" id="drawingAvailabilityCard" style="margin-bottom:10px;background:#f8fbfd"><div class="section-title">GitHub drawing availability</div><div id="drawingAvailabilityStatus" class="muted">Checking acad_substation repository…</div><div id="publishedLayoutPreview" style="margin-top:7px;min-height:28px"></div><div class="actions" style="margin-top:6px"><a class="btn primary" href="https://github.com/puneetnarayan/acad_substation/tree/main/generated" target="_blank" rel="noopener">View generated files</a><a class="btn" href="https://github.com/puneetnarayan/acad_substation/blob/main/generated/substation_layout.dxf" target="_blank" rel="noopener">DXF file on GitHub</a><a class="btn" href="https://github.com/puneetnarayan/acad_substation/blob/main/generated/substation_layout.json" target="_blank" rel="noopener">JSON sidecar</a></div></div>' : '')+'<div class="notice"><strong>Prototype data view.</strong> Sample data are illustrative. These tables are not yet a substitute for approved engineering calculations.</div><div class="card"><h2 class="section-title">'+escapeHtml(sheet || page)+' · '+rows.length+' records</h2>'+table+'</div>';
+    document.getElementById('backDashboard').addEventListener('click',()=>{location.hash='#dashboard';});
+    document.getElementById('moduleDownload').addEventListener('click',downloadWorkbook);
+    if(page==='Drawing & Layout Inputs'||page==='Substation Layout') refreshDrawingAvailability();
+    const genBtn=document.getElementById('generateDraftCables');
+    if(genBtn) genBtn.addEventListener('click',()=>{
+      const feeders=Array.isArray(sampleData.Feeder_Register)?sampleData.Feeder_Register:[];
+      const vfdRows=Array.isArray(sampleData.VFD_Register)?sampleData.VFD_Register:[];
+      const cables=Array.isArray(sampleData.Cable_Schedule)?sampleData.Cable_Schedule:[];
+      let created=0;
+      const addDraft=(source,destination,voltage,category,sourceId,kind)=>{
+        if(!source||!destination)return;
+        const key=String(sourceId||('DRAFT-'+(cables.length+1))).trim();
+        if(cables.some(x=>String(x.Cable_ID||'')===key))return;
+        const missing=[];
+        if(voltage===undefined||voltage===null||String(voltage).trim()==='')missing.push('Voltage_kV');
+        missing.push('Cable specification / OD','Route_ID','Tray_ID','Length_m');
+        cables.push({Cable_ID:key,From:source,To:destination,Voltage_kV:voltage??'',Category:category||kind||'Power cable',Route_ID:'',Tray_ID:'',Length_m:'',Record_Status:'PROVISIONAL DRAFT',Missing_Inputs:missing.join('; ')});
+        created++;
+      };
+      feeders.forEach((f,i)=>{
+        const state=String(f.Spare_or_Used||f.Feeder_Status||'').toLowerCase();
+        if(state.includes('spare') && !String(f.Generate_Cable||'').toLowerCase().match(/yes|true|1/))return;
+        addDraft(f.From_Equipment_ID||f.Source_Equipment_ID||f.Source_Panel_ID||f.Source_Feeder_ID,
+          f.To_Equipment_ID||f.Destination_Equipment_ID||f.Destination_Panel_ID||f.Destination_Feeder_ID,
+          f.Voltage_kV??f.Voltage_V_or_kV, f.Cable_Application||f.Feeder_Function||f.Function,
+          f.Cable_ID||('DRAFT-FDR-'+String(f.Feeder_ID||f.Feeder_Tag||i+1)), 'Feeder');
+      });
+      vfdRows.forEach((v,i)=>{
+        const id=v.VFD_ID||v.Drive_ID||v.VFD_Tag||('VFD-'+(i+1));
+        addDraft(v.Input_Source_Equipment_ID||v.Input_Source_ID||v.Input_Feeder_ID, v.VFD_ID||v.Drive_ID||v.VFD_Tag,
+          v.Input_Voltage_kV, 'VFD input power', 'DRAFT-'+id+'-IN','VFD input');
+        addDraft(v.VFD_ID||v.Drive_ID||v.VFD_Tag, v.Output_Motor_ID||v.Output_Motor_Tag||v.Connected_Motor_ID,
+          v.Output_Voltage_kV, 'VFD output power', 'DRAFT-'+id+'-OUT','VFD output');
+      });
+      sampleData.Cable_Schedule=cables;
+      loadSampleData();
+      renderModule('Feeder & Cable Generation');
+      alert('Created '+created+' provisional draft cable record(s). Missing cable specs, route, tray and length fields are left blank and highlighted light red. Review every generated row; this is not an approved cable schedule.');
+    });
+    const allocationBtn=document.getElementById('runTrayAllocation');
+    if(allocationBtn) allocationBtn.addEventListener('click',()=>{const results=proposeTrayAllocations();renderAllocationResults(results);});
+    const allocationReportBtn=document.getElementById('downloadAllocationReport');
+    if(allocationReportBtn) allocationReportBtn.addEventListener('click',downloadAllocationReport);
+    const helpBtn=document.getElementById('layoutInputHelp');
+    if(helpBtn)helpBtn.addEventListener('click',()=>alert('Drawing hand-off: upload the DWG/DXF produced by the layout app, plus any PDF/image reference or Excel coordinate list. This version stores file metadata as a reference only; geometry extraction and automatic cable routing from drawing geometry are not yet enabled. Original drawings are not modified.'));
+    const drawingBtn=document.getElementById('addDrawingReference');
+    if(drawingBtn)drawingBtn.addEventListener('click',()=>document.getElementById('drawingFile').click());
+    const refreshLayoutBtn=document.getElementById('loadPublishedLayout');
+    if(refreshLayoutBtn)refreshLayoutBtn.addEventListener('click',()=>loadPublishedSubstationLayout(true).then(()=>renderModule(document.getElementById('topTitle').textContent==='Substation Layout'?'Substation Layout':'Drawing & Layout Inputs')).catch(err=>alert('Could not load the published layout: '+err.message)));
+  }
+  function escapeHtml(value) { return String(value).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+  document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', event => {
+    event.preventDefault();
+    document.querySelectorAll('.nav-item').forEach(link => link.classList.remove('active'));
+    item.classList.add('active');
+    const page = item.dataset.page;
+    if(page==='Dashboard'){ location.hash='#dashboard'; location.reload(); return; }
+    renderModule(page);
+  }));
+  document.getElementById('newProjectBtn').addEventListener('click', () => { location.hash = '#project'; renderModule('Project Setup'); });
+  document.getElementById('downloadSampleBtn').addEventListener('click', downloadWorkbook);
+  function downloadWorkbook() {
+    if(!window.XLSX){alert('Excel workbook library did not load. Check your internet connection and reload.');return;}
+    const wb=XLSX.utils.book_new();
+    Object.entries(sampleData).forEach(([name,rows])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),name.slice(0,31)));
+    XLSX.writeFile(wb,'Cable_Scheduling_Sample_Data.xlsx');
+  }
+  document.getElementById('importExcelBtn').addEventListener('click',()=>document.getElementById('excelFile').click());
+  document.getElementById('drawingFile').addEventListener('change',async event=>{
+    const file=event.target.files[0]; if(!file)return;
+    const ext=(file.name.split('.').pop()||'').toLowerCase();
+    const formats={dwg:'DWG',dxf:'DXF',pdf:'PDF',png:'Image',jpg:'Image',jpeg:'Image',tif:'Image',tiff:'Image',xlsx:'Excel reference',xls:'Excel reference',csv:'CSV reference',json:'JSON layout hand-off'};
+    const rows=Array.isArray(sampleData.Panel_Layout)?sampleData.Panel_Layout:[];
+    if(ext==='json'){
+      try{
+        const payload=JSON.parse(await file.text());
+        const items=Array.isArray(payload)?payload:(payload.panels||payload.equipment||payload.items||payload.layout?.panels||payload.layout?.equipment);
+        if(!Array.isArray(items)||!items.length)throw new Error('Expected a non-empty array in panels, equipment, items, layout.panels or layout.equipment.');
+        const stamp=new Date().toISOString();
+        items.forEach((item,i)=>{
+          const id=item.Panel_ID||item.Equipment_ID||item.Tag||item.tag||item.id||('LAYOUT-ITEM-'+(i+1));
+          rows.push({...item,Layout_Reference_ID:'JSON-'+Date.now()+'-'+(i+1),Panel_ID:id,Source_File:file.name,Imported_At:stamp,Source_App:payload.source_app||payload.sourceApp||'External Substation Layout App',Processing_Status:'STRUCTURED DATA IMPORTED — engineering review required',Review_Status:'PENDING'});
+        });
+        sampleData.Panel_Layout=rows;
+        renderModule('Drawing & Layout Inputs');
+        alert('Imported '+items.length+' structured layout item(s) from '+file.name+'. Review panel IDs, X/Y coordinates, dimensions, doors, windows, cut-outs and busduct entries. Original DWG is untouched; imported geometry is not yet used to calculate routes.');
+      }catch(err){alert('JSON layout import failed: '+err.message); }
+      event.target.value='';return;
+    }
+    const id='LAYOUT-REF-'+Date.now();
+    rows.push({Layout_Reference_ID:id,File_Name:file.name,File_Format:formats[ext]||ext.toUpperCase(),File_Size_Bytes:file.size,Imported_At:new Date().toISOString(),Processing_Status:'REFERENCE ONLY — geometry not parsed',Source_App:'External Substation Layout App',Review_Status:'PENDING'});
+    sampleData.Panel_Layout=rows;
+    renderModule('Drawing & Layout Inputs');
+    alert('Drawing reference added: '+file.name+'\\nMetadata is recorded for this browser session only. DWG/DXF geometry is not parsed. For geometry hand-off, the layout app can export a JSON sidecar containing panel IDs, X/Y coordinates, dimensions and openings; import that JSON here.');
+    event.target.value='';
+  });
+  document.getElementById('excelFile').addEventListener('change',async event=>{
+    const file=event.target.files[0]; if(!file)return;
+    if(!window.XLSX){alert('Excel reader did not load. Check your internet connection.');return;}
+    try {
+      const buffer=await file.arrayBuffer(); const workbook=XLSX.read(buffer,{type:'array'});
+      const canonicalSheetName = name => {
+        const key=String(name||'').trim().toLowerCase().replace(/[\\s-]+/g,'_');
+        const aliases={
+          equipment_master:'Equipment_Master',equipment_rows:'Equipment_Rows',
+          cable_spec_master:'Cable_Spec_Master',cable_schedule:'Cable_Schedule',
+          route_master:'Route_Master',route_segments:'Route_Segments',
+          tray_master:'Tray_Master',segregation_rules:'Segregation_Rules',
+          project_settings:'Project_Settings',electrical_system_config:'Electrical_System_Config',switchboard_panels:'Switchboard_Panels',transformer_register:'Transformer_Register',pmcc_imcc_register:'PMCC_IMCC_Register',feeder_register:'Feeder_Register',motor_register:'Motor_Register',vfd_register:'VFD_Register',panel_layout:'Panel_Layout',panel_layout_guide:'Panel_Layout_Guide',power_cable_generation_rules:'Power_Cable_Generation_Rules',readme:'ReadMe'
+        };
+        return aliases[key] || String(name||'').trim();
+      };
+      const imported={}; const importNotes=[];
+      workbook.SheetNames.forEach(name=>{
+        const canonical=canonicalSheetName(name);
+        const rows=XLSX.utils.sheet_to_json(workbook.Sheets[name],{defval:''});
+        if(rows.length) imported[canonical]=rows;
+      });
+      if(!Object.keys(imported).length) throw new Error('No populated worksheets were found.');
+      const aliases={
+        Equipment_Master:{Engineering_Tag:'Tag',Equipment_Type:'Type',Location_Area:'Area',Equipment_Row_ID:'Row'},
+        Cable_Schedule:{Cable_Internal_ID:'Cable_ID',Engineering_Cable_Tag:'Engineering_Tag',From_Equipment_ID:'From',To_Equipment_ID:'To',Operating_Voltage_kV:'Voltage_kV',Cable_Length_m:'Length_m'},
+        Cable_Spec_Master:{Outside_Diameter_mm:'OD_mm',Weight_kg_per_m:'Weight_kg_per_m',Conductor_Size_mm2:'Size_mm2',Core_Count:'Cores',Rated_Voltage_kV:'Voltage_kV'},
+        Route_Master:{From_Area_or_Node:'From',To_Area_or_Node:'To'},
+        Tray_Master:{Tray_Internal_ID:'Tray_ID',Tray_Engineering_Tag:'Engineering_Tag',Nominal_Width_mm:'Width_mm',Usable_Width_mm:'Usable_Width_mm',Tray_Category:'Category',Design_Occupancy_Limit_pct:'Occupancy_Limit_pct'},
+        Route_Segments:{Existing_Tray_ID:'Tray_ID'}
+      };
+      Object.entries(imported).forEach(([sheet,rows])=>{
+        const map=aliases[sheet]||{};
+        imported[sheet]=rows.map(row=>{const out={...row};Object.entries(map).forEach(([from,to])=>{if(out[to]===undefined&&out[from]!==undefined)out[to]=out[from];});return out;});
+      });
+      const supported=Object.keys(imported).filter(name=>name!=='ReadMe');
+      if(!supported.length) throw new Error('Only the ReadMe sheet was found. Import the engineering worksheets from the template.');
+      Object.entries(imported).forEach(([name,rows])=>{sampleData[name]=rows;});
+      loadSampleData();
+      const total=Object.values(imported).reduce((n,rows)=>n+rows.length,0);
+      alert('Imported '+total+' rows across '+Object.keys(imported).length+' worksheet(s). Recognised template sheets are retained, including Equipment_Rows and Route_Segments. Fields are preserved; common template IDs are mapped for validation. Data remain in this browser session only and are not saved to a server or database.');
+    } catch(err) { alert('Could not import workbook: '+err.message); }
+    event.target.value='';
+  });
+  const tiers = document.getElementById('tiers');
+  for (let i=1;i<=10;i++) {
+    const row=document.createElement('div'); row.className='tier';
+    row.innerHTML='<strong>Tier '+i+'</strong><div class="tier-track"><div class="tier-fill" style="width:0%"></div></div><span class="muted">No data</span>';
+    tiers.appendChild(row);
+  }
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+function escapeHtml(value) { return String(value).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+const sampleData = {
+ Equipment_Master: [
+  {Equipment_ID:"SW-33KV-01",Tag:"SW-33KV",Type:"33 kV Switchboard",Area:"Main Substation",Row:"Row 1"},
+  {Equipment_ID:"TR-01",Tag:"TR-01",Type:"33/6.6 kV Transformer",Area:"Transformer Bay",Row:"Row 2"},
+  {Equipment_ID:"SW-6K6-01",Tag:"SW-6.6KV",Type:"6.6 kV Switchboard",Area:"Main Substation",Row:"Row 3"},
+  {Equipment_ID:"MCC-01",Tag:"MCC-01",Type:"LT MCC",Area:"MCC Room",Row:"Row 4"},
+  {Equipment_ID:"PLC-01",Tag:"PLC-01",Type:"PLC Panel",Area:"Control Room",Row:"Row 5"},
+  {Equipment_ID:"UPS-01",Tag:"UPS-01",Type:"UPS Panel",Area:"Electrical Room",Row:"Row 6"}
+ ],
+ Cable_Schedule: [
+  {Cable_ID:"CAB-001",From:"SW-33KV",To:"TR-01",Category:"33 kV Power",Size_mm2:300,Cores:1,Voltage_kV:33,Route_ID:"R01",Tray_ID:"TR-01",Length_m:45},
+  {Cable_ID:"CAB-002",From:"SW-6.6KV",To:"MTR-101",Category:"6.6 kV Power",Size_mm2:185,Cores:3,Voltage_kV:6.6,Route_ID:"R02",Tray_ID:"TR-02",Length_m:78},
+  {Cable_ID:"CAB-003",From:"MCC-01",To:"MTR-201",Category:"LT Power",Size_mm2:50,Cores:4,Voltage_kV:0.415,Route_ID:"R03",Tray_ID:"TR-03",Length_m:65},
+  {Cable_ID:"CAB-004",From:"PLC-01",To:"JB-01",Category:"Control",Size_mm2:2.5,Cores:12,Voltage_kV:1,Route_ID:"R04",Tray_ID:"TR-04",Length_m:70},
+  {Cable_ID:"CAB-005",From:"PLC-01",To:"PT-01",Category:"Instrumentation",Size_mm2:2.5,Cores:4,Voltage_kV:1,Route_ID:"R05",Tray_ID:"TR-05",Length_m:55},
+  {Cable_ID:"CAB-006",From:"UPS-01",To:"DCDB-01",Category:"DC Power",Size_mm2:25,Cores:2,Voltage_kV:0.11,Route_ID:"R06",Tray_ID:"TR-06",Length_m:40},
+  {Cable_ID:"CAB-007",From:"COMM-01",To:"PLC-01",Category:"Communication",Size_mm2:0.5,Cores:8,Voltage_kV:0.01,Route_ID:"R07",Tray_ID:"TR-07",Length_m:100},
+  {Cable_ID:"CAB-008",From:"SAF-01",To:"FAN-01",Category:"Protection",Size_mm2:2.5,Cores:4,Voltage_kV:1,Route_ID:"R08",Tray_ID:"TR-08",Length_m:85}
+ ],
+ Tray_Master: [
+  {Tray_ID:"TR-01",Tray_Type:"Ladder",Width_mm:600,Used_Width_mm:420,Occupancy_pct:70,Cable_Count:8,Tier:1},
+  {Tray_ID:"TR-02",Tray_Type:"Ladder",Width_mm:450,Used_Width_mm:315,Occupancy_pct:70,Cable_Count:12,Tier:2},
+  {Tray_ID:"TR-03",Tray_Type:"Ladder",Width_mm:300,Used_Width_mm:210,Occupancy_pct:70,Cable_Count:18,Tier:3},
+  {Tray_ID:"TR-04",Tray_Type:"Perforated",Width_mm:200,Used_Width_mm:140,Occupancy_pct:70,Cable_Count:25,Tier:4},
+  {Tray_ID:"TR-05",Tray_Type:"Perforated",Width_mm:150,Used_Width_mm:105,Occupancy_pct:70,Cable_Count:30,Tier:5},
+  {Tray_ID:"TR-06",Tray_Type:"Perforated",Width_mm:100,Used_Width_mm:70,Occupancy_pct:70,Cable_Count:22,Tier:6},
+  {Tray_ID:"TR-07",Tray_Type:"Perforated",Width_mm:100,Used_Width_mm:65,Occupancy_pct:65,Cable_Count:28,Tier:7},
+  {Tray_ID:"TR-08",Tray_Type:"Ladder",Width_mm:200,Used_Width_mm:130,Occupancy_pct:65,Cable_Count:16,Tier:8},
+  {Tray_ID:"TR-09",Tray_Type:"Perforated",Width_mm:100,Used_Width_mm:60,Occupancy_pct:60,Cable_Count:19,Tier:9},
+  {Tray_ID:"TR-10",Tray_Type:"Ladder",Width_mm:450,Used_Width_mm:0,Occupancy_pct:0,Cable_Count:0,Tier:10}
+ ],
+ Route_Master: [
+  {Route_ID:"R01",From:"SW-33KV",To:"TR-01",Segments:2},{Route_ID:"R02",From:"SW-6.6KV",To:"MTR-101",Segments:3},
+  {Route_ID:"R03",From:"MCC-01",To:"MTR-201",Segments:3},{Route_ID:"R04",From:"PLC-01",To:"JB-01",Segments:2},
+  {Route_ID:"R05",From:"PLC-01",To:"PT-01",Segments:2},{Route_ID:"R06",From:"UPS-01",To:"DCDB-01",Segments:2},
+  {Route_ID:"R07",From:"COMM-01",To:"PLC-01",Segments:2},{Route_ID:"R08",From:"SAF-01",To:"FAN-01",Segments:3}
+ ],
+ Project_Settings: [{Setting:"Project_Name",Value:"Illustrative Steel Plant Substation"},{Setting:"Max_Tray_Tiers",Value:10},{Setting:"Spare_Capacity_Percent",Value:20},{Setting:"Data_Status",Value:"Illustrative only; verify before engineering use"}],
+ Electrical_System_Config:[{Parameter:"33kV_Arrangement",Value:"Single and multiple switchboards supported"},{Parameter:"6.6kV_Arrangement",Value:"Two transformers / separate bus sections; variable arrangements also supported"},{Parameter:"Include_PCC",Value:"Yes"},{Parameter:"PMCC_to_multiple_IMCCs",Value:"Yes"},{Parameter:"IMCC_Operating_Rule",Value:"Configurable: exactly one incomer ON, other incomer OFF, bus coupler OFF where selected"},{Parameter:"Motor_Data",Value:"Tag, description, kW, voltage, current, starting method, source/destination, drive, duty/standby, redundancy"},{Parameter:"VFD_Cables",Value:"Separate input and output cable records"},{Parameter:"Spare_Feeders",Value:"Record spare feeders; generate cables only when required"},{Parameter:"Layout_Inputs",Value:"DWG/DXF reference, PDF, image/scan, Excel, coordinates, or mixture"},{Parameter:"Panel_Layout",Value:"Straight rows"},{Parameter:"Cable_Generation",Value:"Automatic provisional schedule from feeder register"},{Parameter:"Missing_Field_Display",Value:"Light red"}],Feeder_Register:[],Motor_Register:[],VFD_Register:[],Switchboard_Panels:[],Transformer_Register:[],PMCC_IMCC_Register:[],Panel_Layout:[],Power_Cable_Generation_Rules:[],Panel_Layout_Guide:[]
+};
+let latestValidationResults=[];
+function runValidation(){
+ const results=[];
+ const add=(name,status,detail)=>results.push({name,status,detail});
+ const rows=(name)=>Array.isArray(sampleData[name])?sampleData[name]:[];
+ const required=(sheet,fields,label)=>{
+   const data=rows(sheet);
+   if(!data.length){add(label,'NOT EVALUATED','No records loaded.');return;}
+   const missing=[];
+   data.forEach((r,i)=>fields.forEach(f=>{if(r[f]===undefined||r[f]===null||String(r[f]).trim()==='')missing.push((r.Cable_ID||r.Equipment_ID||r.Tray_ID||r.Route_ID||('row '+(i+2)))+': '+f);}));
+   add(label,missing.length?'FAIL':'PASS',missing.length?missing.length+' missing required value(s): '+missing.slice(0,6).join('; ')+(missing.length>6?' …':''):'Required fields are populated in '+data.length+' record(s).');
+ };
+ const duplicates=(sheet,idField,label)=>{
+   const data=rows(sheet);
+   if(!data.length){add(label,'NOT EVALUATED','No records loaded.');return;}
+   const seen=new Set(),dups=new Set();
+   data.forEach(r=>{const v=String(r[idField]??'').trim();if(v&&seen.has(v))dups.add(v);if(v)seen.add(v);});
+   add(label,dups.size?'FAIL':'PASS',dups.size?'Duplicate identifier(s): '+Array.from(dups).join(', '):'No duplicate '+idField+' values found.');
+ };
+ required('Equipment_Master',['Equipment_ID','Tag','Type'],'Equipment required fields');
+ required('Cable_Schedule',['Cable_ID','From','To','Route_ID'],'Cable schedule required fields');
+ required('Route_Master',['Route_ID'],'Route required fields');
+ required('Tray_Master',['Tray_ID','Width_mm'],'Tray required fields');
+ duplicates('Equipment_Master','Equipment_ID','Duplicate equipment IDs');
+ duplicates('Cable_Schedule','Cable_ID','Duplicate cable IDs');
+ duplicates('Route_Master','Route_ID','Duplicate route IDs');
+ duplicates('Tray_Master','Tray_ID','Duplicate tray IDs');
+ const routes=new Set(rows('Route_Master').map(r=>String(r.Route_ID??'').trim()).filter(Boolean));
+ const trays=new Set(rows('Tray_Master').map(r=>String(r.Tray_ID??'').trim()).filter(Boolean));
+ const cables=rows('Cable_Schedule');
+ if(!cables.length){add('Cable route references','NOT EVALUATED','No cable records loaded.');}
+ else {const bad=cables.filter(r=>!String(r.Route_ID??'').trim()||!routes.has(String(r.Route_ID).trim()));add('Cable route references',bad.length?'FAIL':'PASS',bad.length?bad.length+' cable(s) have a blank or unknown Route_ID: '+bad.slice(0,6).map(r=>r.Cable_ID||'(unnamed)').join(', '):'Every cable Route_ID matches a loaded route.');}
+ if(!cables.length){add('Cable tray references','NOT EVALUATED','No cable records loaded.');}
+ else {const bad=cables.filter(r=>String(r.Tray_ID??'').trim()&&!trays.has(String(r.Tray_ID).trim()));const blank=cables.filter(r=>!String(r.Tray_ID??'').trim());add(bad.length?'FAIL':blank.length?'WARNING':'PASS','', ''); results.pop(); add('Cable tray references',bad.length?'FAIL':blank.length?'WARNING':'PASS',bad.length?bad.length+' cable(s) reference unknown trays.':blank.length?blank.length+' cable(s) have no Tray_ID yet.':'All entered Tray_ID values match loaded trays.');}
+ const trayRows=rows('Tray_Master');
+ if(!trayRows.length)add('Tray width and tier limits','NOT EVALUATED','No tray records loaded.');
+ else {
+   const badWidth=trayRows.filter(r=>!(Number(r.Width_mm)>0));
+   const missingTier=trayRows.filter(r=>r.Tier===undefined||r.Tier===null||String(r.Tier).trim()==='');
+   const badTier=trayRows.filter(r=>r.Tier!==undefined&&r.Tier!==null&&String(r.Tier).trim()!==''&&!(Number.isInteger(Number(r.Tier))&&Number(r.Tier)>=1&&Number(r.Tier)<=10));
+   const tierStatus=badTier.length?'FAIL':missingTier.length?'NOT EVALUATED':'PASS';
+   add(badWidth.length?'FAIL':tierStatus,'Tray width and tier limits', (badWidth.length?badWidth.length+' tray(s) have invalid or missing width. ':'')+(badTier.length?badTier.length+' tray(s) have tier outside 1–10. ':missingTier.length?'Tier data are absent from '+missingTier.length+' tray record(s); tier compliance cannot be evaluated. ':'')||'All tray widths are positive and tiers are between 1 and 10.');
+ }
+ const specs=rows('Cable_Spec_Master');
+ const hasDiameter=specs.length&&specs.some(r=>['Outside_Diameter_mm','OD_mm','Diameter_mm','Cable_OD_mm'].some(k=>Number(r[k])>0));
+ add('Cable-by-cable width calculation',hasDiameter?'NOT EVALUATED':'NOT EVALUATED',hasDiameter?'Diameter data found, but a verified cable-to-tray allocation engine is not yet enabled.':'Not evaluated: approved cable outside diameter and verified cable-to-tray mapping are not available in the current data model.');
+ add('Electrical/mechanical loading','NOT EVALUATED','Cable weights, tray loading limits, derating inputs and installation conditions are not yet validated.');
+ add('Segregation rules','NOT EVALUATED',rows('Segregation_Rules').length?'Rules are present, but automatic route-segment segregation checking is not implemented yet.':'No segregation rules loaded.');
+ const order={'FAIL':0,'WARNING':1,'NOT EVALUATED':2,'PASS':3};
+ results.sort((a,b)=>order[a.status]-order[b.status]);
+ const counts={PASS:0,WARNING:0,FAIL:0,'NOT EVALUATED':0};results.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
+ const body=document.getElementById('validationTable')?.querySelector('tbody');
+ if(body)body.innerHTML=results.map(r=>'<tr><td>'+escapeHtml(r.name)+'</td><td><span class="pill '+(r.status==='PASS'?'good':r.status==='FAIL'?'pending':'')+'">'+escapeHtml(r.status)+'</span></td><td>'+escapeHtml(r.detail)+'</td></tr>').join('');
+ [['validationPass','PASS'],['validationWarning','WARNING'],['validationFail','FAIL'],['validationNE','NOT EVALUATED']].forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.textContent=counts[k]||0;});
+ latestValidationResults=results;
+ return results;
+}
+
+/* Additional engineering checks (non-CAD phase). Checks run only when relevant fields/data are present. */
+const baseRunValidation = runValidation;
+runValidation = function(){
+  const results = baseRunValidation() || [];
+  const rows = name => Array.isArray(sampleData[name]) ? sampleData[name] : [];
+  const add = (name,status,detail) => results.push({name,status,detail});
+  const val = (o,keys) => { for(const k of keys){if(o && o[k]!==undefined && o[k]!==null && String(o[k]).trim()!=='') return o[k];} return ''; };
+  const key = v => String(v??'').trim().toLowerCase();
+  const num = v => v!=='' && v!==null && v!==undefined && Number.isFinite(Number(v)) ? Number(v) : null;
+  const settings = rows('Project_Settings');
+  const setting = (name,fallback) => { const r=settings.find(x=>key(val(x,['Setting','Parameter','Name']))===key(name)); return r ? (num(r.Value) ?? fallback) : fallback; };
+  const cables=rows('Cable_Schedule'), trays=rows('Tray_Master'), segs=rows('Route_Segments'), routes=rows('Route_Master');
+  // Cable lengths: missing values remain warnings, never silently treated as zero.
+  if(!cables.length) add('Cable length completeness','NOT EVALUATED','No cable records loaded.');
+  else {
+    const missing=cables.filter(r=>num(val(r,['Length_m','Cable_Length_m','Estimated_Length_m']))===null);
+    const invalid=cables.filter(r=>{const n=num(val(r,['Length_m','Cable_Length_m','Estimated_Length_m']));return n!==null&&n<=0;});
+    add('Cable length completeness',invalid.length?'FAIL':missing.length?'WARNING':'PASS',
+      invalid.length?invalid.length+' cable(s) have zero/negative length: '+invalid.slice(0,5).map(r=>val(r,['Cable_ID','Engineering_Tag'])||'(unnamed)').join(', '):
+      missing.length?missing.length+' cable(s) have no length yet; length-dependent checks are not evaluated.':'All cable lengths are positive.');
+  }
+  // Cable endpoints against the union of available engineering registers; only evaluate if IDs/tags exist.
+  const endpointRows=['Equipment_Master','Equipment_Rows','Motor_Register','VFD_Register','Transformer_Register','Switchboard_Panels','PMCC_IMCC_Register','Feeder_Register'];
+  const known=new Set();
+  endpointRows.forEach(s=>rows(s).forEach(r=>['Equipment_ID','Tag','Equipment_Tag','Motor_Tag','VFD_Tag','Transformer_ID','Panel_ID','Panel_Tag','Feeder_ID','Feeder_Tag','Engineering_Tag','ID'].forEach(k=>{if(key(r[k]))known.add(key(r[k]));})));
+  if(!cables.length || !known.size) add('Cable endpoint register matching','NOT EVALUATED','No cable records or no populated equipment identifiers are available to compare.');
+  else {
+    const unmatched=[];
+    cables.forEach(r=>[['From',['From','From_Equipment_ID','Source','Source_Tag']],['To',['To','To_Equipment_ID','Destination','Destination_Tag']]].forEach(([side,fields])=>{
+      const v=key(val(r,fields)); if(v&&!known.has(v)) unmatched.push((val(r,['Cable_ID','Engineering_Tag'])||'(unnamed)')+' '+side+'='+val(r,fields));
+    }));
+    add('Cable endpoint register matching',unmatched.length?'WARNING':'PASS',unmatched.length?unmatched.length+' endpoint(s) were not found in the loaded registers. Review aliases or import the missing equipment: '+unmatched.slice(0,5).join('; '):'All populated cable endpoints match a loaded equipment register.');
+  }
+  // Tray capacity checks use explicitly entered used width / occupancy, never infer cable diameter.
+  if(!trays.length) add('Tray capacity / spare margin','NOT EVALUATED','No tray records loaded.');
+  else {
+    const spare=setting('Spare_Capacity_Percent',20);
+    const findings=[];
+    let evaluated=0;
+    trays.forEach(t=>{
+      const id=val(t,['Tray_ID','Engineering_Tag'])||'(unnamed tray)';
+      const width=num(val(t,['Usable_Width_mm','Width_Usable_mm','Width_mm','Nominal_Width_mm']));
+      const used=num(val(t,['Used_Width_mm','Occupied_Width_mm','Cable_Width_Used_mm']));
+      const pct=num(val(t,['Occupancy_pct','Occupancy_Percent','Occupancy_pct_calculated']));
+      const limit=num(val(t,['Occupancy_Limit_pct','Design_Occupancy_Limit_pct'])) ?? (100-spare);
+      if(width!==null&&width>0&&used!==null){evaluated++;const p=used/width*100;if(used<0||used>width)findings.push(id+': used width '+used+' mm exceeds tray width '+width+' mm or is negative');else if(p>limit)findings.push(id+': '+p.toFixed(1)+'% width occupancy exceeds '+limit+'% design limit');}
+      else if(pct!==null){evaluated++;if(pct<0||pct>100)findings.push(id+': occupancy '+pct+'% is outside 0–100%');else if(pct>limit)findings.push(id+': occupancy '+pct+'% exceeds '+limit+'% design limit');}
+    });
+    add('Tray capacity / spare margin', !evaluated?'NOT EVALUATED':findings.length?'FAIL':'PASS', !evaluated?'No usable width plus used width or explicit occupancy values found; capacity cannot be assessed.':findings.length?findings.slice(0,8).join('; ')+(findings.length>8?' …':''):'Entered tray occupancy is within the configured design limit ('+(100-spare)+'% default). Note: this is a width-screening check, not cable-fill certification.');
+  }
+  // Route segment continuity: evaluate only if sequence and node fields exist.
+  const routeId=r=>key(val(r,['Route_ID','Route']));
+  const fromNode=r=>key(val(r,['From_Node','From','Start_Node','Start']));
+  const toNode=r=>key(val(r,['To_Node','To','End_Node','End']));
+  const seq=r=>num(val(r,['Sequence','Segment_Sequence','Segment_No','Order']));
+  if(!segs.length) add('Route segment continuity','NOT EVALUATED','No Route_Segments records loaded.');
+  else {
+    const usable=segs.filter(s=>routeId(s)&&fromNode(s)&&toNode(s)&&seq(s)!==null);
+    if(!usable.length) add('Route segment continuity','NOT EVALUATED','Route_Segments lacks a usable Route_ID, sequence, From_Node and To_Node combination.');
+    else {
+      const problems=[];
+      const groups={}; usable.forEach(s=>(groups[routeId(s)]??=[]).push(s));
+      Object.entries(groups).forEach(([rid,list])=>{list.sort((a,b)=>seq(a)-seq(b));for(let i=1;i<list.length;i++){if(seq(list[i])===seq(list[i-1]))problems.push(rid+': duplicate segment sequence '+seq(list[i]));if(toNode(list[i-1])!==fromNode(list[i]))problems.push(rid+': gap between '+toNode(list[i-1])+' and '+fromNode(list[i]));}});
+      add(problems.length?'FAIL':'PASS','Route segment continuity',problems.length?problems.slice(0,8).join('; ')+(problems.length>8?' …':''):'All sequenced route segments join end-to-end.');
+    }
+  }
+  // IMCC normal-state interlock: only checks explicit ON/OFF states in loaded records.
+  const imcc=rows('PMCC_IMCC_Register');
+  const on=v=>['on','closed','1','true','yes'].includes(key(v));
+  const off=v=>['off','open','0','false','no'].includes(key(v));
+  const interlockRows=imcc.filter(r=>['Incomer_1_Status','Incomer1_Status','Incomer_A_Status','Incomer_2_Status','Incomer2_Status','Incomer_B_Status','Bus_Coupler_Status','Coupler_Status'].some(k=>r[k]!==undefined&&String(r[k]).trim()!==''));
+  if(!imcc.length||!interlockRows.length) add('IMCC normal-state interlock','NOT EVALUATED','No explicit IMCC incomer and bus-coupler ON/OFF states are present. Rule: exactly one incomer ON; the other incomer and bus coupler OFF.');
+  else {
+    const bad=[];
+    interlockRows.forEach(r=>{
+      const a=val(r,['Incomer_1_Status','Incomer1_Status','Incomer_A_Status']);
+      const b=val(r,['Incomer_2_Status','Incomer2_Status','Incomer_B_Status']);
+      const c=val(r,['Bus_Coupler_Status','Coupler_Status']);
+      if(!a||!b||!c||(!on(a)&&!off(a))||(!on(b)&&!off(b))||(!on(c)&&!off(c)))bad.push(val(r,['IMCC_ID','IMCC_Tag','Tag'])||'(IMCC row)'+': incomplete/unknown switching state');
+      else if(Number(on(a))+Number(on(b))!==1||!off(c))bad.push((val(r,['IMCC_ID','IMCC_Tag','Tag'])||'(IMCC row)')+': expected exactly one incomer ON, other OFF, coupler OFF');
+    });
+    add(bad.length?'FAIL':'PASS','IMCC normal-state interlock',bad.length?bad.slice(0,8).join('; '):'Explicit IMCC switching states comply with the configured normal-state rule.');
+  }
+  // Required equipment data readiness, without assigning defaults to missing fields.
+  const motors=rows('Motor_Register');
+  if(!motors.length) add('Motor data completeness','NOT EVALUATED','No Motor_Register rows loaded.');
+  else {
+    const fields=[['Tag',['Motor_Tag','Tag','Equipment_Tag']],['kW',['kW','Rated_kW','Power_kW']],['Voltage',['Voltage_kV','Voltage_V','Rated_Voltage']],['Starting method',['Starting_Method','Start_Method']],['Source',['Source','From','Source_Tag']],['Destination',['Destination','To','Destination_Tag']]];
+    let missing=0; const examples=[];
+    motors.forEach((m,i)=>fields.forEach(([label,keys])=>{if(!val(m,keys)){missing++;if(examples.length<6)examples.push((val(m,['Motor_Tag','Tag','Equipment_Tag'])||'motor row '+(i+2))+': '+label);}}));
+    add(missing?'WARNING':'PASS','Motor data completeness',missing?missing+' required motor field(s) missing: '+examples.join('; ')+(missing>6?' …':''):'Tag, power, voltage, starting method and source/destination are populated for all motors.');
+  }
+  // Re-render results and counters including the additional checks.
+  const order={'FAIL':0,'WARNING':1,'NOT EVALUATED':2,'PASS':3};
+  results.sort((a,b)=>(order[a.status]??4)-(order[b.status]??4));
+  const counts={PASS:0,WARNING:0,FAIL:0,'NOT EVALUATED':0}; results.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
+  const body=document.getElementById('validationTable')?.querySelector('tbody');
+  if(body) body.innerHTML=results.map(r=>'<tr><td>'+escapeHtml(r.name)+'</td><td><span class="pill '+(r.status==='PASS'?'good':r.status==='FAIL'?'pending':'')+'">'+escapeHtml(r.status)+'</span></td><td>'+escapeHtml(r.detail)+'</td></tr>').join('');
+  [['validationPass','PASS'],['validationWarning','WARNING'],['validationFail','FAIL'],['validationNE','NOT EVALUATED']].forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.textContent=counts[k]||0;});
+  latestValidationResults=results;
+  return results;
+};
+
+
+let latestTrayAllocationResults=[];
+function proposeTrayAllocations(){
+ const cables=sampleData.Cable_Schedule||[],trays=sampleData.Tray_Master||[],specs=sampleData.Cable_Spec_Master||[],segs=sampleData.Route_Segments||[],routes=sampleData.Route_Master||[];
+ const norm=v=>String(v??'').trim().toLowerCase(),val=(o,ks)=>{for(const k of ks)if(o&&o[k]!==undefined&&o[k]!==null&&String(o[k]).trim()!=='')return o[k];return '';},num=v=>v!==''&&v!==null&&v!==undefined&&Number.isFinite(Number(v))?Number(v):null;
+ const setting=(name,def)=>{const r=(sampleData.Project_Settings||[]).find(x=>norm(x.Setting||x.Parameter||x.Name)===norm(name));return r?num(r.Value)??def:def;};
+ const maxTiers=setting('Max_Tray_Tiers',10),spare=setting('Spare_Capacity_Percent',20);
+ const trayId=t=>norm(val(t,['Tray_ID','Tray_Internal_ID','Engineering_Tag']));
+ const trayMap=new Map(trays.map(t=>[trayId(t),t]).filter(x=>x[0]));
+ const candidates=new Map();
+ const addCandidate=(rid,tid)=>{rid=norm(rid);tid=norm(tid);if(rid&&tid&&trayMap.has(tid)){if(!candidates.has(rid))candidates.set(rid,[]);candidates.get(rid).push(tid);}};
+ segs.forEach(s=>addCandidate(val(s,['Route_ID','Route']),val(s,['Tray_ID','Existing_Tray_ID','Tray_Internal_ID','Tray_Engineering_Tag'])));
+ routes.forEach(r=>addCandidate(val(r,['Route_ID','Route']),val(r,['Tray_ID','Assigned_Tray_ID','Preferred_Tray_ID'])));
+ const capacity=new Map();
+ trays.forEach(t=>{const id=trayId(t),width=num(val(t,['Usable_Width_mm','Width_Usable_mm','Usable_Width','Width_mm','Nominal_Width_mm'])),entered=num(val(t,['Used_Width_mm','Occupied_Width_mm','Cable_Width_Used_mm'])),pct=num(val(t,['Occupancy_pct','Occupancy_Percent']));capacity.set(id,{width,used:entered!==null?entered:(width!==null&&pct!==null?width*pct/100:null),tier:num(t.Tier),limit:num(val(t,['Occupancy_Limit_pct','Design_Occupancy_Limit_pct']))??(100-spare)});});
+ const getOD=c=>{let od=num(val(c,['Cable_OD_mm','OD_mm','Outside_Diameter_mm','Diameter_mm']));if(od>0)return od;const sid=norm(val(c,['Cable_Spec_ID','Spec_ID','Cable_Specification','Cable_Type','Specification_ID']));let s=specs.find(x=>[x.Cable_Spec_ID,x.Spec_ID,x.Specification_ID,x.Cable_Type,x.Cable_ID].some(v=>norm(v)===sid));if(!s){const tag=norm(val(c,['Cable_ID','Engineering_Tag']));s=specs.find(x=>[x.Cable_Spec_ID,x.Spec_ID,x.Cable_Type,x.Cable_ID,x.Engineering_Tag].some(v=>norm(v)===tag));}od=s?num(val(s,['OD_mm','Outside_Diameter_mm','Diameter_mm','Cable_OD_mm'])):null;return od>0?od:null;};
+ const out=[];
+ cables.forEach((c,i)=>{const id=val(c,['Cable_ID','Engineering_Tag','Cable_Internal_ID'])||'row '+(i+2),existing=val(c,['Tray_ID','Existing_Tray_ID']);if(existing){out.push({Cable_ID:id,Status:'EXISTING — PRESERVED',Proposed_Tray_ID:existing,Cable_OD_mm:getOD(c)||'',Width_Allowance_mm:'',Reason:'Existing assignment is preserved; proposal does not overwrite it.'});return;}
+ const od=getOD(c);if(!od){out.push({Cable_ID:id,Status:'NOT EVALUATED',Proposed_Tray_ID:'',Cable_OD_mm:'',Width_Allowance_mm:'',Reason:'Approved cable outside diameter is missing.'});return;}
+ const rid=val(c,['Route_ID','Route']),opts=candidates.get(norm(rid))||[];if(!rid||!opts.length){out.push({Cable_ID:id,Status:'NOT EVALUATED',Proposed_Tray_ID:'',Cable_OD_mm:od,Width_Allowance_mm:(od*1.1).toFixed(2),Reason:'No route-specific tray candidate found in Route_Segments or Route_Master.'});return;}
+ const widthReq=od*1.1,ok=opts.map(tid=>({tid,t:trayMap.get(tid),s:capacity.get(tid)})).filter(x=>x.s&&x.s.width>0&&x.s.used!==null&&x.s.used>=0&&x.s.used<=x.s.width&&x.s.tier!==null&&x.s.tier>=1&&x.s.tier<=maxTiers&&x.s.used+widthReq<=x.s.width*x.s.limit/100);
+ if(!ok.length){out.push({Cable_ID:id,Status:'NOT EVALUATED',Proposed_Tray_ID:'',Cable_OD_mm:od,Width_Allowance_mm:widthReq.toFixed(2),Reason:'Candidate tray needs verified width, occupancy, valid tier and sufficient spare capacity.'});return;}
+ ok.sort((a,b)=>(a.s.width*a.s.limit/100-a.s.used-widthReq)-(b.s.width*b.s.limit/100-b.s.used-widthReq)||a.tid.localeCompare(b.tid));const pick=ok[0];pick.s.used+=widthReq;
+ out.push({Cable_ID:id,Status:'PROPOSAL — REVIEW',Proposed_Tray_ID:val(pick.t,['Tray_ID','Tray_Internal_ID','Engineering_Tag']),Cable_OD_mm:od,Width_Allowance_mm:widthReq.toFixed(2),Reason:'Route-compatible tray with smallest adequate remaining capacity. Segregation, bend radius, geometry and mechanical loading still require review.'});
+ });
+ latestTrayAllocationResults=out;return out;
+}
+function renderAllocationResults(rows){
+ const host=document.getElementById('pageContent');if(!host)return;let p=document.getElementById('allocationProposalPanel');if(!p){p=document.createElement('div');p.id='allocationProposalPanel';p.className='card';p.style.marginTop='10px';host.appendChild(p);}
+ const n=rows.filter(r=>r.Status==='PROPOSAL — REVIEW').length,ne=rows.filter(r=>r.Status==='NOT EVALUATED').length;
+ p.innerHTML='<h2 class="section-title">Tray allocation proposals</h2><p class="muted">'+n+' proposal(s); '+ne+' not evaluated. Proposal mode does not alter existing Cable_Schedule assignments.</p><div class="table-wrap"><table><thead><tr><th>Cable ID</th><th>Status</th><th>Proposed tray</th><th>OD (mm)</th><th>Width allowance (mm)</th><th>Reason</th></tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr><td>'+escapeHtml(r.Cable_ID)+'</td><td>'+escapeHtml(r.Status)+'</td><td>'+escapeHtml(r.Proposed_Tray_ID||'')+'</td><td>'+escapeHtml(r.Cable_OD_mm??'')+'</td><td>'+escapeHtml(r.Width_Allowance_mm??'')+'</td><td>'+escapeHtml(r.Reason)+'</td></tr>').join(''):'<tr><td colspan="6" class="empty">No cable records loaded.</td></tr>')+'</tbody></table></div>';
+}
+function downloadAllocationReport(){const rows=latestTrayAllocationResults.length?latestTrayAllocationResults:proposeTrayAllocations(),q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',csv=[['Cable_ID','Status','Proposed_Tray_ID','Cable_OD_mm','Width_Allowance_mm','Reason'],...rows.map(r=>[r.Cable_ID,r.Status,r.Proposed_Tray_ID,r.Cable_OD_mm,r.Width_Allowance_mm,r.Reason])].map(r=>r.map(q).join(',')).join('\r\n'),blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Tray_Allocation_Proposal.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
+
+function loadSampleData(){
+ document.getElementById('cableCount').textContent=(sampleData.Cable_Schedule||[]).length;
+ document.getElementById('equipmentCount').textContent=(sampleData.Equipment_Master||[]).length;
+ document.getElementById('routeCount').textContent=(sampleData.Route_Master||[]).length;
+ const trays=sampleData.Tray_Master||[];
+ document.querySelector('#sampleTable tbody').innerHTML=trays.length?trays.map(t=>{
+   const width=Number(t.Width_mm)||0, hasUsed=t.Used_Width_mm!==undefined&&t.Used_Width_mm!==null&&String(t.Used_Width_mm).trim()!=='', used=hasUsed?Number(t.Used_Width_mm):null;
+   const occupancy=width>0&&hasUsed&&Number.isFinite(used)?Math.round(used/width*100):null;
+   return '<tr><td>'+escapeHtml(t.Tray_ID||'')+'</td><td>'+escapeHtml(t.Tray_Type||'')+'</td><td>'+(width>0?width:'Not Evaluated')+'</td><td>'+(used===null?'Not Evaluated':used)+'</td><td>'+(occupancy===null?'Not Evaluated':occupancy+'%')+'</td><td>'+escapeHtml(t.Cable_Count??'Not Evaluated')+'</td></tr>';
+ }).join(''):'<tr><td colspan="6" class="empty">No data loaded. Import a workbook or load sample data.</td></tr>';
+ document.querySelectorAll('#tiers .tier').forEach((row,i)=>{const t=trays[i];const width=t?Number(t.Width_mm):0,hasUsed=!!t&&t.Used_Width_mm!==undefined&&t.Used_Width_mm!==null&&String(t.Used_Width_mm).trim()!=='';const used=hasUsed?Number(t.Used_Width_mm):null;const occupancy=width>0&&hasUsed&&Number.isFinite(used)?Math.round(used/width*100):null;row.querySelector('.tier-fill').style.width=(occupancy===null?0:Math.min(100,occupancy))+'%';row.querySelector('span').textContent=occupancy===null?'Not Evaluated':occupancy+'%';});
+ const notice=document.querySelector('#pageContent .notice');
+ if(notice) notice.innerHTML='<strong>Data loaded.</strong> '+(trays.length?'Illustrative sample records are populated automatically. Tray occupancy shown here is calculated as entered used width ÷ tray width; other engineering checks remain pending.':'No active data. Import a workbook or load sample data.');
+ runValidation();
+}
+function clearAllData(){
+ Object.keys(sampleData).forEach(key=>sampleData[key]=[]);
+ document.getElementById('cableCount').textContent='0';
+ document.getElementById('equipmentCount').textContent='0';
+ document.getElementById('routeCount').textContent='0';
+ document.querySelector('#sampleTable tbody').innerHTML='<tr><td colspan="6" class="empty">Data cleared. Import a workbook or load sample data.</td></tr>';
+ document.querySelectorAll('#tiers .tier').forEach(row=>{row.querySelector('.tier-fill').style.width='0%';row.querySelector('span').textContent='Not Evaluated';});
+ const notice=document.querySelector('#pageContent .notice');
+ if(notice) notice.innerHTML='<strong>Data cleared.</strong> Import a new Excel workbook or reload the illustrative sample data.';
+ document.getElementById('topTitle').textContent='Cable Scheduling & Tray Allocation';
+ runValidation();
+}
+document.getElementById('downloadValidationReport')?.addEventListener('click',()=>{
+ const rows=latestValidationResults.length?latestValidationResults:runValidation();
+ const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+ const csv=[['Check','Status','Finding / Recommended Action'],...rows.map(r=>[r.name,r.status,r.detail])].map(row=>row.map(quote).join(',')).join('\r\n');
+ const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+ const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='Cable_Scheduling_Validation_Report.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+});
+document.getElementById('loadSampleBtn').addEventListener('click',loadSampleData);
+document.getElementById('clearDataBtn').addEventListener('click',()=>{
+ if(confirm('Clear all current browser-session data? This cannot be undone. Download a copy first if needed.')) clearAllData();
+});
+// Populate sample data automatically whenever the app is opened.
+loadSampleData();
+// Overlay the published layout sample/latest project revision for the drawing hand-off.
+loadPublishedSubstationLayout(false).catch(err=>{latestSubstationLayoutStatus='Published layout unavailable; use checked-in sample drawing';console.warn(err);});
+</script></body>
+</html>
