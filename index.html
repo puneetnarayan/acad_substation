@@ -59,7 +59,24 @@ main{max-width:1680px;margin:auto;padding:7px 10px}.sidebar{position:fixed;left:
 </main><div class="foot">ACAD Substation Layout Studio · Prototype for engineering drafting workflow · Not a substitute for approved design review</div>
 <script>
 const $=id=>document.getElementById(id);
-const seedPanels=()=>Array.from({length:30},(_,i)=>{let types=["33KV INCOMER","33KV FEEDER","6.6KV INCOMER","6.6KV FEEDER","PMCC INCOMER","PMCC FEEDER","IMCC INCOMER","IMCC FEEDER","MCC SPARE","CONTROL PANEL"];let t=types[i%types.length];return {id:"PNL-"+String(i+1).padStart(2,"0"),row:(i%4)+1,type:t,service:(i%5===0?"Incomer":i%5===1?"Outgoing feeder":"Motor / feeder")+" "+String(i+1).padStart(2,"0"),order:i+1,width:i%7===0?1000:800,depth:i%4===0?1400:1200,height:2200,gap:i===29?0:10,front:900,rear:900,draw:"Yes"}});
+const seedPanels=()=>{
+ const panels=[];let seq=1;
+ const add=(category,count,width,depth,height,service,options={})=>{
+  for(let i=0;i<count;i++)panels.push({id:category.replace(/[^A-Z0-9]/gi,"").toUpperCase().slice(0,5)+"-"+String(i+1).padStart(2,"0"),row:options.row||((i%4)+1),type:category,service:(options.servicePrefix||service)+" "+String(i+1).padStart(2,"0"),order:seq++,width,depth,height,gap:options.gap??10,front:900,rear:1000,draw:"Yes",category});
+ };
+ add("6.6 kV Switchboard",66,800,1500,2500,"6.6 kV feeder",{gap:0});
+ // Special wider switchboard cubicles; counted separately from the 66 standard panels.
+ add("6.6 kV Switchboard",2,800,1500,2500,"6.6 kV incomer",{gap:0,servicePrefix:"INCOMER"});
+ add("6.6 kV Bus Coupler",1,1200,1500,2500,"6.6 kV bus coupler",{gap:0});
+ add("LV VFD 3600",10,3600,1500,2500,"LV VFD drive");
+ add("MV VFD",5,3000,1500,2500,"MV VFD drive");
+ add("PMCC",4,6000,1500,2200,"PMCC section");
+ add("IMCC",5,4500,1500,2200,"IMCC section");
+ add("LV VFD 1500",10,1500,1500,2200,"LV VFD drive");
+ // Defaults: 4 rows aligned with the four 2,000-mm cutout strips.
+ panels.forEach((p,i)=>{p.row=(i%4)+1;p.front=900;p.rear=1000});
+ return panels;
+};
 let state={panels:seedPanels(),openings:[{id:"D-01",type:"Double Door",wall:"South",position:9000,width:1800,height:2200,operation:"Swing Out"},{id:"W-01",type:"Window",wall:"North",position:6000,width:2400,height:1200,operation:"Fixed"}],buses:[{id:"HT-BD-01",type:"HT Bus Duct",service:"33 kV incomer",x:1800,y:14000,width:1200,depth:900,bottom:3000,top:4200,connected:"PNL-01"},{id:"LV-BD-01",type:"LV Bus Duct",service:"415 V bus",x:24000,y:8000,width:1600,depth:1000,bottom:2800,top:3900,connected:"PNL-21"}]};
 function persist(){localStorage.setItem("acadSubstationState",JSON.stringify(state));renderAll();scheduleAutoPublish()}
 function load(){try{let s=JSON.parse(localStorage.getItem("acadSubstationState"));if(s&&s.panels){state=s;state.panels.forEach((p,i)=>{if(!Number(p.row))p.row=(i%4)+1})}}catch(e){}}
