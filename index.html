@@ -54,7 +54,7 @@ main{max-width:1680px;margin:auto;padding:7px 10px}.sidebar{position:fixed;left:
 </section>
 <section id="openings" class="tabpane hidden"><div class="panel"><h2>Doors and windows</h2><div class="toolbar"><button class="btn primary" id="addOpening">＋ Add opening</button></div><div id="openingTable" class="table-wrap"></div><p class="hint">Position is from the selected wall start. Preview shows schematic markers only.</p></div></section>
 <section id="busducts" class="tabpane hidden"><div class="panel"><h2>HT / LV bus duct entries</h2><div class="toolbar"><button class="btn primary" id="addBus">＋ Add bus duct</button></div><div id="busTable" class="table-wrap"></div><p class="hint">X/Y are room-coordinate centre points. Enter approved dimensions and elevations.</p></div></section>
-<section id="previewTab" class="tabpane hidden"><div class="panel"><h2>Live plan preview</h2><svg id="preview" viewBox="0 0 1000 650" role="img" aria-label="Substation plan preview"></svg><details class="compact-details"><summary>Preview limitations</summary><p class="hint">Schematic preview only; not a construction drawing. Verify dimensions, openings and electrical clearances in AutoCAD.</p></details></div></section>
+<section id="previewTab" class="tabpane hidden"><div class="panel"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Master layout drawing preview</h2><div class="toolbar" style="margin:0"><button class="btn" id="zoomOut" type="button">− Zoom out</button><button class="btn" id="zoomReset" type="button">Fit drawing</button><button class="btn" id="zoomIn" type="button">＋ Zoom in</button><button class="btn primary" id="exportA3Pdf" type="button">Export A3 Landscape PDF</button></div></div><p class="hint">This live vector preview follows the current layout data used to generate the DXF. Zoom to inspect details; export opens the browser print dialog with A3 landscape settings—choose “Save as PDF”.</p><div id="previewViewport" style="width:100%;height:min(72vh,760px);min-height:360px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fbfcfd"><svg id="preview" viewBox="0 0 1000 650" role="img" aria-label="Substation master layout drawing preview" style="width:100%;height:100%;min-height:360px"></svg></div><div class="hint" id="zoomReadout">Zoom: 100%</div><details class="compact-details"><summary>Preview and PDF notes</summary><p class="hint">PDF uses vector SVG for sharp linework and text, with A3 landscape page setup. Actual print scale depends on the browser print settings; select A3, Landscape, and 100%/Fit as appropriate. This is a drawing preview, not proof of DWG validation. Confirm dimensions, openings, clearances and electrical routes in AutoCAD before issue.</p></details></div></section>
 <section id="instructions" class="tabpane hidden"><div class="panel"><h2>Workflow</h2><ol><li>Edit the panel schedule and room dimensions.</li><li>Review the plan preview and input checks.</li><li>Export panels CSV or project JSON as a backup.</li><li>Download the AutoLISP file and CSV bundle. Transfer the CSV and LISP to a Windows computer with full AutoCAD.</li><li>In AutoCAD, load the LISP using APPLOAD, then run command <b>ACAD_SUBSTATION</b> and select the exported panel CSV.</li><li>Review generated geometry, dimension styles, text size, door swings, openings and all electrical clearances before issuing a drawing.</li></ol><details class="compact-details"><summary>Important workflow & data handling</summary><p class="hint">The browser cannot control local AutoCAD directly. Export project data and load the LISP with APPLOAD. The current LISP draws panel footprints and labels only; verify on a test drawing. Data stays in this browser local storage; export a JSON backup.</p></details></div></section>
 </main><div class="foot">ACAD Substation Layout Studio · Prototype for engineering drafting workflow · Not a substitute for approved design review</div>
 <script>
@@ -137,6 +137,23 @@ function updateStats(extraProblems=[]){
  $("validation").textContent=all.length?all.length+" layout/input issue(s): "+all.slice(0,5).join(" · ")+(all.length>5?" · +"+(all.length-5)+" more":""):"Basic four-row geometry checks passed. Confirm all clearances and construction details with the approved engineering design.";
  return all;
 }
+let previewZoom=1;
+function applyPreviewZoom(){
+ const svg=$("preview"),w=1000/previewZoom,h=650/previewZoom,x=(1000-w)/2,y=(650-h)/2;
+ svg.setAttribute("viewBox",x+" "+y+" "+w+" "+h);
+ const label=$("zoomReadout");if(label)label.textContent="Zoom: "+Math.round(previewZoom*100)+"%";
+}
+function exportA3LandscapePdf(){
+ const svg=$("preview");if(!svg)return;
+ const clone=svg.cloneNode(true);clone.setAttribute("viewBox","0 0 1000 650");clone.setAttribute("width","400mm");clone.setAttribute("height","260mm");clone.style.width="400mm";clone.style.height="260mm";clone.style.minHeight="0";
+ const win=window.open("","_blank");if(!win){alert("Allow pop-ups for this app to export the PDF.");return;}
+ win.document.open();win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Substation Layout — A3 Landscape</title><style>@page{size:A3 landscape;margin:8mm}html,body{margin:0;padding:0;background:#fff;font-family:Arial,sans-serif}body{width:100%;height:100%;display:flex;align-items:center;justify-content:center}.drawing{width:100%;height:100%;display:flex;align-items:center;justify-content:center}.drawing svg{max-width:100%;max-height:100%;object-fit:contain;print-color-adjust:exact;-webkit-print-color-adjust:exact}@media print{html,body{width:100%;height:100%}}</style></head><body><div class="drawing">'+clone.outerHTML+'</div><script>window.onload=()=>{setTimeout(()=>window.print(),250)};<\/script></body></html>');
+ win.document.close();
+}
+$("zoomIn").addEventListener("click",()=>{previewZoom=Math.min(4,previewZoom*1.25);applyPreviewZoom()});
+$("zoomOut").addEventListener("click",()=>{previewZoom=Math.max(.5,previewZoom/1.25);applyPreviewZoom()});
+$("zoomReset").addEventListener("click",()=>{previewZoom=1;applyPreviewZoom()});
+$("exportA3Pdf").addEventListener("click",exportA3LandscapePdf);
 function renderPreview(){
  const s=readSettings(),svg=$("preview"),W=1000,H=650,pad=48;
  const scale=Math.min((W-2*pad)/Math.max(1,s.roomX),(H-2*pad)/Math.max(1,s.roomY)),rw=s.roomX*scale,rh=s.roomY*scale,ox=(W-rw)/2,oy=(H-rh)/2;
@@ -163,6 +180,7 @@ function renderPreview(){
  z.push('<text x="'+(ox+rw/2)+'" y="'+(oy+rh+18)+'" font-size="11" text-anchor="middle" fill="#34485c">Room X = '+s.roomX+' mm · Y = '+s.roomY+' mm</text>');
  z.push('<rect x="48" y="'+(H-28)+'" width="10" height="10" fill="#dcebf7" stroke="#3979a8"/><text x="62" y="'+(H-19)+'" font-size="10" fill="#536879">Panel</text><rect x="112" y="'+(H-28)+'" width="10" height="10" fill="#f5e8d8" stroke="#c7a37b"/><text x="126" y="'+(H-19)+'" font-size="10" fill="#536879">Cutout strip</text><rect x="218" y="'+(H-28)+'" width="10" height="10" fill="#eee8f8" stroke="#8979ae"/><text x="232" y="'+(H-19)+'" font-size="10" fill="#536879">AHU area</text>');
  svg.innerHTML=z.join("");
+ applyPreviewZoom();
  updateStats(problems);
 }
 function renderAll(){renderPanelTable();renderGeneric("opening",state.openings,[["id","Opening ID"],["type","Type"],["wall","Wall"],["position","Position from wall start (mm)"],["width","Width (mm)"],["height","Height (mm)"],["operation","Operation"]],{position:"number",width:"number",height:"number"});renderGeneric("bus",state.buses,[["id","Bus duct ID"],["type","Type"],["service","Service"],["x","Centre X (mm)"],["y","Centre Y (mm)"],["width","Opening width (mm)"],["depth","Opening depth (mm)"],["bottom","Bottom elevation (mm)"],["top","Top elevation (mm)"],["connected","Connected panel"]],{x:"number",y:"number",width:"number",depth:"number",bottom:"number",top:"number"});updateStats();renderPreview()}
