@@ -120,11 +120,9 @@ function renderPublishedLayoutPreview(payload){
   const refresh=document.getElementById('refreshEmbeddedAcad');if(refresh)refresh.addEventListener('click',async()=>{refresh.disabled=true;refresh.textContent='Refreshing…';const status=document.getElementById('drawingAvailabilityStatus');try{await loadPublishedSubstationLayout(false);const frame=document.getElementById('embeddedAcadStudio');if(frame)frame.src='https://acad-substation.vercel.app/?published=1&refresh='+Date.now();if(status)status.innerHTML='<span class="pill good">Latest published layout refreshed</span> <span class="muted">'+new Date().toLocaleTimeString()+'</span>';}catch(e){if(status)status.textContent='Refresh failed: '+e.message;}finally{refresh.disabled=false;refresh.textContent='Refresh drawing';}});
 }
 
-async function loadPublishedSubstationLayout(showAlert=false){
-  const url=SUBSTATION_LAYOUT_JSON_URL+'?cache='+Date.now();
-  const response=await fetch(url,{cache:'no-store'});
-  if(!response.ok)throw new Error('HTTP '+response.status+' while reading '+SUBSTATION_LAYOUT_JSON_URL);
-  const payload=await response.json();
+async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=null){
+  let payload=suppliedPayload;
+  if(!payload){const url=SUBSTATION_LAYOUT_JSON_URL+'?cache='+Date.now();const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status+' while reading '+SUBSTATION_LAYOUT_JSON_URL);payload=await response.json();}
   if(!payload||!Array.isArray(payload.panels)||!payload.settings)throw new Error('Layout JSON must contain settings and a panels array.');
   latestSubstationLayout=payload;
   renderPublishedLayoutPreview(payload);
@@ -668,7 +666,20 @@ document.getElementById('clearDataBtn').addEventListener('click',()=>{
 });
 // Populate sample data automatically whenever the app is opened.
 loadSampleData();
-// Overlay the published layout sample/latest project revision for the drawing hand-off.
-loadPublishedSubstationLayout(false).catch(err=>{latestSubstationLayoutStatus='Published layout unavailable; use checked-in sample drawing';console.warn(err);});
+// Receive live active-ECR data from the ACAD Substation master.
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||event.data?.type!=='ACAD_SUBSTATION_ECR_SYNC'||!event.data.payload)return;
+ const payload=event.data.payload;
+ loadPublishedSubstationLayout(false,payload).then(()=>{
+  const ecr=payload.ecr||{},title=document.getElementById('topTitle');
+  latestSubstationLayoutStatus='Live ACAD layout synced · '+(ecr.name||'active ECR');
+  if(title)title.textContent='Cable Scheduling & Tray Allocation · '+(ecr.name||'Active ECR');
+  const notice=document.querySelector('#pageContent .notice');
+  if(notice)notice.innerHTML='<strong>Live ACAD master data.</strong> '+escapeHtml(ecr.name||'Active ECR')+' · '+(payload.panels||[]).length+' panel(s) · room '+escapeHtml(payload.settings?.roomX??'')+' × '+escapeHtml(payload.settings?.roomY??'')+' mm. Switch ECR in ACAD Substation to refresh. Cable routes, cable sizes and tray capacities remain separate engineering inputs and are not inferred.';
+ }).catch(err=>console.warn('Could not apply live ACAD ECR data',err));
+});
+if(window.parent!==window)window.parent.postMessage({type:'ACAD_CABLE_SYNC_REQUEST'},location.origin);
+// Fallback for standalone use; the parent sends the selected ECR after iframe load.
+loadPublishedSubstationLayout(false).catch(err=>{latestSubstationLayoutStatus='Published layout unavailable; waiting for live ACAD master data';console.warn(err);});
 </script></body>
 </html>
