@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source_app": "acad_substation",
-  "updated_at": "2026-10-25T15:15:48.873Z",
+  "updated_at": "2026-10-25T15:48:03.397Z",
   "sample_data": true,
   "drawing_path": "generated/substation_layout.dxf",
   "drawing_url": "https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf",
@@ -55,8 +55,10 @@
       "Draw": "Yes",
       "Row": 1,
       "X_mm": 1000,
-      "Y_mm": 3000,
-      "Out_Of_Bounds": false
+      "Y_mm": 1300,
+      "Category_Gap_mm": 0,
+      "Out_Of_Bounds": false,
+      "Category": "33kV Incomer"
     },
     {
       "Panel_ID": "PNL-02",
@@ -70,10 +72,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2,
-      "X_mm": 1000,
-      "Y_mm": 9250,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 3010,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "33kV Feeder"
     },
     {
       "Panel_ID": "PNL-03",
@@ -87,10 +91,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3,
-      "X_mm": 1000,
-      "Y_mm": 15500,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 4820,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "6.6kV Incomer"
     },
     {
       "Panel_ID": "PNL-04",
@@ -104,10 +110,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4,
-      "X_mm": 1000,
-      "Y_mm": 21750,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 6630,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "6.6kV Feeder"
     },
     {
       "Panel_ID": "PNL-05",
@@ -122,9 +130,11 @@
       "Rear_Access_mm": 900,
       "Draw": "Yes",
       "Row": 1,
-      "X_mm": 2010,
-      "Y_mm": 3000,
-      "Out_Of_Bounds": false
+      "X_mm": 8440,
+      "Y_mm": 1300,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "PMCC Incomer"
     },
     {
       "Panel_ID": "PNL-06",
@@ -138,10 +148,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2,
-      "X_mm": 1810,
-      "Y_mm": 9250,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 10250,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "PMCC Feeder"
     },
     {
       "Panel_ID": "PNL-07",
@@ -155,10 +167,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3,
-      "X_mm": 1810,
-      "Y_mm": 15500,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 12060,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "IMCC Incomer"
     },
     {
       "Panel_ID": "PNL-08",
@@ -172,10 +186,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4,
-      "X_mm": 1810,
-      "Y_mm": 21750,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 13870,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "IMCC Feeder"
     },
     {
       "Panel_ID": "PNL-09",
@@ -190,9 +206,11 @@
       "Rear_Access_mm": 900,
       "Draw": "Yes",
       "Row": 1,
-      "X_mm": 2820,
-      "Y_mm": 3000,
-      "Out_Of_Bounds": false
+      "X_mm": 15880,
+      "Y_mm": 1300,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "LT Panel"
     },
     {
       "Panel_ID": "PNL-10",
@@ -206,10 +224,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2,
-      "X_mm": 2620,
-      "Y_mm": 9250,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 17690,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "Control Panel"
     },
     {
       "Panel_ID": "PNL-11",
@@ -223,10 +243,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3,
-      "X_mm": 2620,
-      "Y_mm": 15500,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 19500,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "33kV Incomer"
     },
     {
       "Panel_ID": "PNL-12",
@@ -240,10 +262,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4,
-      "X_mm": 2820,
-      "Y_mm": 21750,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 21310,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "33kV Feeder"
     },
     {
       "Panel_ID": "PNL-13",
@@ -258,9 +282,11 @@
       "Rear_Access_mm": 900,
       "Draw": "Yes",
       "Row": 1,
-      "X_mm": 3630,
-      "Y_mm": 3000,
-      "Out_Of_Bounds": false
+      "X_mm": 23120,
+      "Y_mm": 1300,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "6.6kV Incomer"
     },
     {
       "Panel_ID": "PNL-14",
@@ -274,10 +300,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2,
-      "X_mm": 3430,
-      "Y_mm": 9250,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 24930,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "6.6kV Feeder"
     },
     {
       "Panel_ID": "PNL-15",
@@ -291,10 +319,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3,
-      "X_mm": 3430,
-      "Y_mm": 15500,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 26740,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "PMCC Incomer"
     },
     {
       "Panel_ID": "PNL-16",
@@ -308,10 +338,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4,
-      "X_mm": 3630,
-      "Y_mm": 21750,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 28750,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "PMCC Feeder"
     },
     {
       "Panel_ID": "PNL-17",
@@ -326,9 +358,11 @@
       "Rear_Access_mm": 900,
       "Draw": "Yes",
       "Row": 1,
-      "X_mm": 4440,
-      "Y_mm": 3000,
-      "Out_Of_Bounds": false
+      "X_mm": 30560,
+      "Y_mm": 1300,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "IMCC Incomer"
     },
     {
       "Panel_ID": "PNL-18",
@@ -342,10 +376,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2,
-      "X_mm": 4240,
-      "Y_mm": 9250,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 32370,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "IMCC Feeder"
     },
     {
       "Panel_ID": "PNL-19",
@@ -359,10 +395,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3,
-      "X_mm": 4440,
-      "Y_mm": 15500,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 34180,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "LT Panel"
     },
     {
       "Panel_ID": "PNL-20",
@@ -376,10 +414,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4,
-      "X_mm": 4440,
-      "Y_mm": 21750,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 35990,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "Control Panel"
     },
     {
       "Panel_ID": "PNL-21",
@@ -394,9 +434,11 @@
       "Rear_Access_mm": 900,
       "Draw": "Yes",
       "Row": 1,
-      "X_mm": 5250,
-      "Y_mm": 3000,
-      "Out_Of_Bounds": false
+      "X_mm": 37800,
+      "Y_mm": 1300,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "33kV Incomer"
     },
     {
       "Panel_ID": "PNL-22",
@@ -410,10 +452,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2,
-      "X_mm": 5050,
-      "Y_mm": 9250,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 39610,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "33kV Feeder"
     },
     {
       "Panel_ID": "PNL-23",
@@ -427,10 +471,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3,
-      "X_mm": 5250,
-      "Y_mm": 15500,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 41620,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "6.6kV Incomer"
     },
     {
       "Panel_ID": "PNL-24",
@@ -444,10 +490,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4,
-      "X_mm": 5250,
-      "Y_mm": 21750,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 43430,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "6.6kV Feeder"
     },
     {
       "Panel_ID": "PNL-25",
@@ -462,9 +510,11 @@
       "Rear_Access_mm": 900,
       "Draw": "Yes",
       "Row": 1,
-      "X_mm": 6060,
-      "Y_mm": 3000,
-      "Out_Of_Bounds": false
+      "X_mm": 45240,
+      "Y_mm": 1300,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "PMCC Incomer"
     },
     {
       "Panel_ID": "PNL-26",
@@ -478,10 +528,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2,
-      "X_mm": 6060,
-      "Y_mm": 9250,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 47050,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "PMCC Feeder"
     },
     {
       "Panel_ID": "PNL-27",
@@ -495,10 +547,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 3,
-      "X_mm": 6060,
-      "Y_mm": 15500,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 48860,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "IMCC Incomer"
     },
     {
       "Panel_ID": "PNL-28",
@@ -512,10 +566,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 4,
-      "X_mm": 6060,
-      "Y_mm": 21750,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 50670,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "IMCC Feeder"
     },
     {
       "Panel_ID": "PNL-29",
@@ -530,9 +586,11 @@
       "Rear_Access_mm": 900,
       "Draw": "Yes",
       "Row": 1,
-      "X_mm": 6870,
-      "Y_mm": 3000,
-      "Out_Of_Bounds": false
+      "X_mm": 52480,
+      "Y_mm": 1300,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "LT Panel"
     },
     {
       "Panel_ID": "PNL-30",
@@ -546,10 +604,12 @@
       "Front_Access_mm": 900,
       "Rear_Access_mm": 900,
       "Draw": "Yes",
-      "Row": 2,
-      "X_mm": 6870,
-      "Y_mm": 9250,
-      "Out_Of_Bounds": false
+      "Row": 1,
+      "X_mm": 54490,
+      "Y_mm": 1400,
+      "Category_Gap_mm": 1000,
+      "Out_Of_Bounds": false,
+      "Category": "Control Panel"
     }
   ],
   "openings": [
@@ -603,8 +663,9 @@
     "DXF is an ASCII exchange drawing; open it in AutoCAD and save as DWG.",
     "Verify panel locations and clearances before engineering use.",
     "Default source sample refreshed to rebuild DXF after label-sanitization fix.",
-    "Generated automatically by scripts/generate-layout.mjs when input/substation_layout.json changes.",
-    "DXF is an exchange drawing; open it in AutoCAD and save as native DWG.",
+    "Generated automatically by GitHub Actions after each published input update.",
+    "Stable DXF/JSON URLs are used by the connected cablescheduling app.",
+    "DXF is an exchange drawing; native DWG requires AutoCAD Save As.",
     "Engineering review is required before use."
   ],
   "build": {
