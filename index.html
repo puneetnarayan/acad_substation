@@ -16,7 +16,7 @@ main{max-width:1680px;margin:auto;padding:7px 10px}.sidebar{position:fixed;left:
 <header><div><h1>ACAD Substation Layout Studio</h1><p>Panel layout · room planning · AutoCAD 2026 handoff</p></div><span class="badge">mm · browser autosave</span></header>
 <main>
 <div class="toolbar">
-<button class="btn primary" id="addPanel">＋ Add panel</button><button class="btn" id="sample">Load 30-row sample</button><button class="btn" id="exportCsv">Export panels CSV</button><button class="btn" id="exportJson">Export project JSON</button><button class="btn" id="exportLisp">Download AutoLISP generator</button><button class="btn primary" id="exportDxf">Download DXF drawing</button><button class="btn" id="publishGitHub">Publish latest to GitHub</button><input id="panelCsvUpload" type="file" accept=".csv" hidden><button class="btn" id="uploadPanelCsv">Upload panel CSV</button><button class="btn" id="uploadProjectJson">Upload project JSON</button><input id="projectJsonUpload" type="file" accept=".json,application/json" hidden><button class="btn" id="exportBundle">Download CSV bundle</button><button class="btn danger" id="reset">Reset project</button>
+<button class="btn primary" id="addPanel">＋ Add panel</button><button class="btn" id="sample">Load 30-row sample</button><button class="btn" id="exportCsv">Export panels CSV</button><button class="btn" id="exportJson">Export project JSON</button><button class="btn" id="exportLisp">Download AutoLISP generator</button><button class="btn primary" id="viewDrawing">View generated drawing</button><button class="btn primary" id="exportDxf">Download DXF drawing</button><button class="btn" id="publishGitHub">Publish latest to GitHub</button><input id="panelCsvUpload" type="file" accept=".csv" hidden><button class="btn" id="uploadPanelCsv">Upload panel CSV</button><button class="btn" id="uploadProjectJson">Upload project JSON</button><input id="projectJsonUpload" type="file" accept=".json,application/json" hidden><button class="btn" id="exportBundle">Download CSV bundle</button><button class="btn danger" id="reset">Reset project</button>
 </div>
 <div class="stats"><div class="stat"><strong id="panelCount">30</strong><span>Panels</span></div><div class="stat"><strong id="lineupLength">24.3 m</strong><span>Estimated lineup length</span></div><div class="stat"><strong id="roomSize">30 × 18 m</strong><span>Room inside dimensions</span></div><div class="stat"><strong id="issues">0</strong><span>Input issues detected</span></div></div>
 <div class="tabs"><button class="tab active" data-tab="panels">Panel schedule</button><button class="tab" data-tab="room">Room & layout</button><button class="tab" data-tab="openings">Doors & windows</button><button class="tab" data-tab="busducts">HT/LV bus ducts</button><button class="tab" data-tab="previewTab">Plan preview</button><button class="tab" data-tab="instructions">How to use</button></div>
@@ -54,7 +54,7 @@ main{max-width:1680px;margin:auto;padding:7px 10px}.sidebar{position:fixed;left:
 </section>
 <section id="openings" class="tabpane hidden"><div class="panel"><h2>Doors and windows</h2><div class="toolbar"><button class="btn primary" id="addOpening">＋ Add opening</button></div><div id="openingTable" class="table-wrap"></div><p class="hint">Position is from the selected wall start. Preview shows schematic markers only.</p></div></section>
 <section id="busducts" class="tabpane hidden"><div class="panel"><h2>HT / LV bus duct entries</h2><div class="toolbar"><button class="btn primary" id="addBus">＋ Add bus duct</button></div><div id="busTable" class="table-wrap"></div><p class="hint">X/Y are room-coordinate centre points. Enter approved dimensions and elevations.</p></div></section>
-<section id="previewTab" class="tabpane hidden"><div class="panel"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Master layout drawing preview</h2><div class="toolbar" style="margin:0"><button class="btn" id="zoomOut" type="button">− Zoom out</button><button class="btn" id="zoomReset" type="button">Fit drawing</button><button class="btn" id="zoomIn" type="button">＋ Zoom in</button><button class="btn primary" id="exportA3Pdf" type="button">Export A3 Landscape PDF</button></div></div><p class="hint">This live vector preview follows the current layout data used to generate the DXF. Zoom to inspect details; export opens the browser print dialog with A3 landscape settings—choose “Save as PDF”.</p><div id="previewViewport" style="width:100%;height:min(72vh,760px);min-height:360px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fbfcfd"><svg id="preview" viewBox="0 0 1000 650" role="img" aria-label="Substation master layout drawing preview" style="width:100%;height:100%;min-height:360px"></svg></div><div class="hint" id="zoomReadout">Zoom: 100%</div><details class="compact-details"><summary>Preview and PDF notes</summary><p class="hint">PDF uses vector SVG for sharp linework and text, with A3 landscape page setup. Actual print scale depends on the browser print settings; select A3, Landscape, and 100%/Fit as appropriate. This is a drawing preview, not proof of DWG validation. Confirm dimensions, openings, clearances and electrical routes in AutoCAD before issue.</p></details></div></section>
+<section id="previewTab" class="tabpane hidden"><div class="panel"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Master layout drawing preview</h2><div class="toolbar" style="margin:0"><button class="btn" id="zoomOut" type="button">− Zoom out</button><button class="btn" id="zoomReset" type="button">Fit drawing</button><button class="btn" id="zoomIn" type="button">＋ Zoom in</button><button class="btn primary" id="exportA3Pdf" type="button">Export A3 Landscape PDF</button></div></div><p class="hint">Live vector drawing from the current layout data. Use zoom buttons or mouse wheel; drag to pan. Export a direct-download, vector A3 landscape PDF.</p><div id="previewViewport" style="width:100%;height:min(72vh,760px);min-height:360px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fbfcfd"><svg id="preview" viewBox="0 0 1000 650" role="img" aria-label="Substation master layout drawing preview" style="width:100%;height:100%;min-height:360px;cursor:grab;touch-action:none"></svg></div><div class="hint" id="zoomReadout">Zoom: 100%</div><details class="compact-details"><summary>Preview and PDF notes</summary><p class="hint">PDF is generated as vector linework/text at A3 landscape (420 × 297 mm), with a room plan and panel schedule. It remains sharp when zoomed. The drawing is a planning aid, not evidence of DWG validation; check dimensions and clearances before issuing.</p></details></div></section>
 <section id="instructions" class="tabpane hidden"><div class="panel"><h2>Workflow</h2><ol><li>Edit the panel schedule and room dimensions.</li><li>Review the plan preview and input checks.</li><li>Export panels CSV or project JSON as a backup.</li><li>Download the AutoLISP file and CSV bundle. Transfer the CSV and LISP to a Windows computer with full AutoCAD.</li><li>In AutoCAD, load the LISP using APPLOAD, then run command <b>ACAD_SUBSTATION</b> and select the exported panel CSV.</li><li>Review generated geometry, dimension styles, text size, door swings, openings and all electrical clearances before issuing a drawing.</li></ol><details class="compact-details"><summary>Important workflow & data handling</summary><p class="hint">The browser cannot control local AutoCAD directly. Export project data and load the LISP with APPLOAD. The current LISP draws panel footprints and labels only; verify on a test drawing. Data stays in this browser local storage; export a JSON backup.</p></details></div></section>
 </main><div class="foot">ACAD Substation Layout Studio · Prototype for engineering drafting workflow · Not a substitute for approved design review</div>
 <script>
@@ -137,23 +137,127 @@ function updateStats(extraProblems=[]){
  $("validation").textContent=all.length?all.length+" layout/input issue(s): "+all.slice(0,5).join(" · ")+(all.length>5?" · +"+(all.length-5)+" more":""):"Basic four-row geometry checks passed. Confirm all clearances and construction details with the approved engineering design.";
  return all;
 }
-let previewZoom=1;
+let previewZoom=1,previewPanX=0,previewPanY=0,previewDrag=null;
 function applyPreviewZoom(){
- const svg=$("preview"),w=1000/previewZoom,h=650/previewZoom,x=(1000-w)/2,y=(650-h)/2;
+ const svg=$("preview"),w=1000/previewZoom,h=650/previewZoom;
+ const x=(1000-w)/2+previewPanX,y=(650-h)/2+previewPanY;
  svg.setAttribute("viewBox",x+" "+y+" "+w+" "+h);
- const label=$("zoomReadout");if(label)label.textContent="Zoom: "+Math.round(previewZoom*100)+"%";
+ const label=$("zoomReadout");if(label)label.textContent="Zoom: "+Math.round(previewZoom*100)+"% · Wheel to zoom · Drag to pan";
 }
-function exportA3LandscapePdf(){
- const svg=$("preview");if(!svg)return;
- const clone=svg.cloneNode(true);clone.setAttribute("viewBox","0 0 1000 650");clone.setAttribute("width","400mm");clone.setAttribute("height","260mm");clone.style.width="400mm";clone.style.height="260mm";clone.style.minHeight="0";
- const win=window.open("","_blank");if(!win){alert("Allow pop-ups for this app to export the PDF.");return;}
- win.document.open();win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Substation Layout — A3 Landscape</title><style>@page{size:A3 landscape;margin:8mm}html,body{margin:0;padding:0;background:#fff;font-family:Arial,sans-serif}body{width:100%;height:100%;display:flex;align-items:center;justify-content:center}.drawing{width:100%;height:100%;display:flex;align-items:center;justify-content:center}.drawing svg{max-width:100%;max-height:100%;object-fit:contain;print-color-adjust:exact;-webkit-print-color-adjust:exact}@media print{html,body{width:100%;height:100%}}</style></head><body><div class="drawing">'+clone.outerHTML+'</div><script>window.onload=()=>{setTimeout(()=>window.print(),250)};<\/script></body></html>');
- win.document.close();
+function zoomPreviewAt(factor,clientX,clientY){
+ const svg=$("preview"),r=svg.getBoundingClientRect(),oldW=1000/previewZoom,oldH=650/previewZoom;
+ const oldX=(1000-oldW)/2+previewPanX,oldY=(650-oldH)/2+previewPanY;
+ const rx=clientX==null?0.5:Math.max(0,Math.min(1,(clientX-r.left)/Math.max(1,r.width)));
+ const ry=clientY==null?0.5:Math.max(0,Math.min(1,(clientY-r.top)/Math.max(1,r.height)));
+ const anchorX=oldX+rx*oldW,anchorY=oldY+ry*oldH;
+ previewZoom=Math.max(0.5,Math.min(8,previewZoom*factor));
+ const newW=1000/previewZoom,newH=650/previewZoom;
+ previewPanX=anchorX-rx*newW-(1000-newW)/2;
+ previewPanY=anchorY-ry*newH-(650-newH)/2;
+ applyPreviewZoom();
 }
-$("zoomIn").addEventListener("click",()=>{previewZoom=Math.min(4,previewZoom*1.25);applyPreviewZoom()});
-$("zoomOut").addEventListener("click",()=>{previewZoom=Math.max(.5,previewZoom/1.25);applyPreviewZoom()});
-$("zoomReset").addEventListener("click",()=>{previewZoom=1;applyPreviewZoom()});
+function bindDrawingViewer(){
+ const svg=$("preview");if(!svg||svg.dataset.viewerBound==="1")return;svg.dataset.viewerBound="1";
+ svg.addEventListener("wheel",e=>{e.preventDefault();zoomPreviewAt(e.deltaY<0?1.12:1/1.12,e.clientX,e.clientY)},{passive:false});
+ svg.addEventListener("pointerdown",e=>{if(e.button!==0)return;previewDrag={x:e.clientX,y:e.clientY,panX:previewPanX,panY:previewPanY};svg.style.cursor="grabbing";svg.setPointerCapture?.(e.pointerId)});
+ svg.addEventListener("pointermove",e=>{if(!previewDrag)return;const r=svg.getBoundingClientRect();previewPanX=previewDrag.panX-(e.clientX-previewDrag.x)*(1000/previewZoom)/Math.max(1,r.width);previewPanY=previewDrag.panY-(e.clientY-previewDrag.y)*(650/previewZoom)/Math.max(1,r.height);applyPreviewZoom()});
+ const stop=e=>{previewDrag=null;svg.style.cursor="grab";if(e&&svg.hasPointerCapture?.(e.pointerId))svg.releasePointerCapture(e.pointerId)};
+ svg.addEventListener("pointerup",stop);svg.addEventListener("pointercancel",stop);svg.addEventListener("lostpointercapture",()=>{previewDrag=null;svg.style.cursor="grab"});
+}
+function buildA3LandscapePdf(){
+ const s=readSettings(),geom=calculatePlacements(s),placements=geom.placements,lane=geom.lane,cutN=geom.cutN,cutW=geom.cutW,rowCount=geom.rowCount;
+ const PW=1190.551,PH=841.89,margin=26,topSpace=66,bottomSpace=235;
+ const xmin=-4200,xmax=s.roomX+1200,ymin=-3600,ymax=s.roomY+2200;
+ const scale=Math.min((PW-2*margin)/(xmax-xmin),(PH-topSpace-bottomSpace)/(ymax-ymin));
+ const boxW=(xmax-xmin)*scale,boxH=(ymax-ymin)*scale;
+ const ox=(PW-boxW)/2-xmin*scale,oy=bottomSpace+(PH-topSpace-bottomSpace-boxH)/2-ymin*scale;
+ const nfmt=v=>(Math.round(Number(v)*1000)/1000).toString();
+ const safe=t=>String(t==null?"":t).replace(/[\r\n]/g," ").replace(/[–—]/g,"-").replace(/·/g,"-").replace(/[^\x20-\x7E]/g,"-");
+ const escPdf=t=>safe(t).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");
+ const px=x=>ox+Number(x)*scale,py=y=>oy+Number(y)*scale,ops=[];
+ const rgb=(v,fill)=>v.map(nfmt).join(" ")+(fill?" rg\n":" RG\n");
+ const line=(x1,y1,x2,y2,color=[0.20,0.28,0.36],width=0.8,dash)=>{ops.push("q\n"+rgb(color,false)+nfmt(width)+" w\n"+(dash?"["+dash.map(nfmt).join(" ")+"] 0 d\n":"[] 0 d\n")+nfmt(px(x1))+" "+nfmt(py(y1))+" m\n"+nfmt(px(x2))+" "+nfmt(py(y2))+" l\nS\nQ\n")};
+ const rect=(x,y,w,h,stroke=[0.20,0.28,0.36],fill=null,width=0.8,dash)=>{let q="q\n";if(fill)q+=rgb(fill,true);q+=rgb(stroke,false)+nfmt(width)+" w\n"+(dash?"["+dash.map(nfmt).join(" ")+"] 0 d\n":"[] 0 d\n")+nfmt(px(x))+" "+nfmt(py(y))+" "+nfmt(w*scale)+" "+nfmt(h*scale)+" re\n"+(fill?"B\n":"S\n")+"Q\n";ops.push(q)};
+ const pageText=(x,y,size,value,color=[0.16,0.22,0.29])=>ops.push("q\n"+rgb(color,true)+"BT\n/F1 "+nfmt(size)+" Tf\n1 0 0 1 "+nfmt(x)+" "+nfmt(y)+" Tm\n("+escPdf(value)+") Tj\nET\nQ\n");
+ const worldText=(x,y,size,value,color)=>pageText(px(x),py(y),size,value,color);
+ // Page background, sheet title and drawing metadata.
+ ops.push("q\n1 1 1 rg\n0 0 "+nfmt(PW)+" "+nfmt(PH)+" re\nf\nQ\n");
+ pageText(28,PH-30,16,s.projectName+" - SUBSTATION LAYOUT");
+ pageText(28,PH-45,8.5,"ROOM "+s.roomX+" x "+s.roomY+" mm | BUILDING "+s.floorLevels+" | GENERATED "+new Date().toISOString().slice(0,10));
+ pageText(PW-275,PH-30,9,"A3 LANDSCAPE - VECTOR PDF");
+ pageText(PW-275,PH-45,7.5,"Planning drawing - verify in AutoCAD");
+ // Room and cutout geometry.
+ rect(0,0,s.roomX,s.roomY,[0.16,0.22,0.29],[1,1,1],1.4);
+ worldText(s.roomX/2,s.roomY+700,8,s.drawingName||"SUBSTATION PLAN");
+ for(let i=0;i<cutN;i++){const cy=i*(lane+cutW);rect(0,cy,s.roomX,cutW,[0.72,0.55,0.34],[0.98,0.93,0.86],0.45,[3,2]);worldText(s.roomX/2,cy+cutW/2,5.5,"CUTOUT "+(i+1)+" - "+cutW+" mm",[0.47,0.33,0.14]);}
+ placements.forEach(p=>{const out=p.x<0||p.y<0||p.x+p.w>s.roomX||p.y+p.d>s.roomY;rect(p.x,p.y,p.w,p.d,out?[0.74,0.18,0.18]:[0.24,0.43,0.59],out?[1,0.88,0.88]:[0.85,0.91,0.96],0.7);worldText(p.x+p.w/2,p.y+p.d/2,4.8,p.id+" R"+p.row,[0.10,0.19,0.28]);});
+ // AHU reserved area.
+ if(s.ahuRequired==="Yes"&&s.ahuX>0&&s.ahuY>0){let w=s.ahuX,h=s.ahuY,cl=s.ahuClearance||1000,x=s.roomX-w-cl,y=s.roomY-h-cl; if(s.ahuLocation==="North-west"){x=cl;y=s.roomY-h-cl}else if(s.ahuLocation==="South-east"){x=s.roomX-w-cl;y=cl}else if(s.ahuLocation==="South-west"){x=cl;y=cl}if(["North-east","North-west","South-east","South-west"].includes(s.ahuLocation)){rect(x,y,w,h,[0.52,0.45,0.68],[0.94,0.91,0.98],0.9,[3,2]);worldText(x+w/2,y+h/2,6,"AHU - "+s.ahuLevel,[0.35,0.29,0.48]);}}
+ // Door/window locations and bus duct entry footprints.
+ state.openings.forEach(o=>{const pos=+o.position||0,w=+o.width||0,wall=o.wall;if(wall==="South"||wall==="North"){const y=wall==="South"?0:s.roomY;line(pos,y-80,pos+w,y+80,[0.73,0.43,0.15],1.4);worldText(pos+w/2,y+(wall==="South"?260:330),6,o.id,[0.55,0.31,0.09]);}else{const x=wall==="West"?0:s.roomX;line(x-80,pos,x+80,pos+w,[0.73,0.43,0.15],1.4);worldText(x+(wall==="West"?260:-500),pos+w/2,6,o.id,[0.55,0.31,0.09]);}});
+ state.buses.forEach(b=>{const x=+b.x||0,y=+b.y||0,w=+b.width||0,d=+b.depth||0;rect(x-w/2,y-d/2,w,d,[0.65,0.38,0.08],[0.99,0.91,0.78],0.8);worldText(x,y,5.5,b.id,[0.48,0.26,0.03]);});
+ // Dimension extension lines and labels in world coordinates.
+ line(0,-1200,s.roomX,-1200,[0.35,0.42,0.49],0.6);line(0,-1400,0,0,[0.35,0.42,0.49],0.45);line(s.roomX,-1400,s.roomX,0,[0.35,0.42,0.49],0.45);worldText(s.roomX/2,-1050,7,"75000 mm",[0.22,0.29,0.36]);
+ line(-1200,0,-1200,s.roomY,[0.35,0.42,0.49],0.6);line(-1400,0,0,0,[0.35,0.42,0.49],0.45);line(-1400,s.roomY,0,s.roomY,[0.35,0.42,0.49],0.45);worldText(-3300,s.roomY/2,7,"25000 mm",[0.22,0.29,0.36]);
+ // Panel schedule occupies the lower sheet band, to keep the 75 m plan readable on A3.
+ const tableX=28,tableY=31,tableW=PW-56,colW=tableW/3,rowH=13.2;
+ pageText(tableX,tableY+rowH*11+9,9,"PANEL SCHEDULE - "+placements.length+" PANELS");
+ for(let col=0;col<3;col++){
+   const x=tableX+col*colW;rectPage(x,tableY,colW-5,rowH*11,[0.78,0.83,0.87],[1,1,1],0.45);rectPage(x,tableY+rowH*10,colW-5,rowH,[0.70,0.80,0.87],[0.91,0.95,0.98],0.45);
+   pageText(x+5,tableY+rowH*10+4.2,6.5,"PANEL ID / ROW       TYPE / SERVICE                  W x D x H (mm)");
+   for(let k=0;k<10;k++){const p=placements[col*10+k];if(!p)continue;const y=tableY+rowH*(9-k)+4.1;const typ=safe(p.raw.type||p.raw.Panel_Type||"Panel");const service=safe(p.raw.service||p.raw.Service||"");pageText(x+5,y,6.2,p.id+" / R"+p.row+"   "+(typ+" "+service).slice(0,38)+"   "+p.w+"x"+p.d+"x"+(Number(p.raw.height)||s.defaultHeight),[0.20,0.27,0.34]);}
+ }
+ // Sheet border and footer.
+ line(18,18,PW-18,18,[0.55,0.61,0.66],0.55);line(18,18,18,PH-18,[0.55,0.61,0.66],0.55);line(PW-18,18,PW-18,PH-18,[0.55,0.61,0.66],0.55);line(18,PH-18,PW-18,PH-18,[0.55,0.61,0.66],0.55);
+ pageText(28,22,6.4,"ACAD Substation Layout Studio | Sample/project data - NOT FOR CONSTRUCTION");
+ pageText(PW-250,22,6.4,"Units: mm | Sheet: A3 Landscape");
+ function rectPage(x,y,w,h,stroke,fill,width=0.5){let q="q\n";if(fill)q+=rgb(fill,true);q+=rgb(stroke,false)+nfmt(width)+" w\n"+nfmt(x)+" "+nfmt(y)+" "+nfmt(w)+" "+nfmt(h)+" re\n"+(fill?"B\n":"S\n")+"Q\n";ops.push(q);}
+ const stream=ops.join("");
+ const objs=[];
+ objs.push("<< /Type /Catalog /Pages 2 0 R >>");
+ objs.push("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+ objs.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+nfmt(PW)+" "+nfmt(PH)+"] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>");
+ objs.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+ objs.push("<< /Length "+stream.length+" >>\nstream\n"+stream+"endstream");
+ let pdf="%PDF-1.4\n",offsets=[0];
+ objs.forEach((o,i)=>{offsets.push(pdf.length);pdf+=(i+1)+" 0 obj\n"+o+"\nendobj\n"});
+ const xref=pdf.length;pdf+="xref\n0 "+(objs.length+1)+"\n0000000000 65535 f \n";
+ for(let i=1;i<offsets.length;i++)pdf+=String(offsets[i]).padStart(10,"0")+" 00000 n \n";
+ pdf+="trailer\n<< /Size "+(objs.length+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF\n";
+ return pdf;
+}
+function exportA3LandscapePdf(){const pdf=buildA3LandscapePdf();download("Substation_Layout_A3_Landscape.pdf",pdf,"application/pdf");}
+function applyPreviewZoom(){
+ const svg=$("preview"),w=1000/previewZoom,h=650/previewZoom;
+ const x=(1000-w)/2+previewPanX,y=(650-h)/2+previewPanY;
+ svg.setAttribute("viewBox",x+" "+y+" "+w+" "+h);
+ const label=$("zoomReadout");if(label)label.textContent="Zoom: "+Math.round(previewZoom*100)+"% · Wheel to zoom · Drag to pan";
+}
+function zoomPreviewAt(factor,clientX,clientY){
+ const svg=$("preview"),r=svg.getBoundingClientRect(),oldW=1000/previewZoom,oldH=650/previewZoom;
+ const oldX=(1000-oldW)/2+previewPanX,oldY=(650-oldH)/2+previewPanY;
+ const rx=clientX==null?0.5:Math.max(0,Math.min(1,(clientX-r.left)/Math.max(1,r.width)));
+ const ry=clientY==null?0.5:Math.max(0,Math.min(1,(clientY-r.top)/Math.max(1,r.height)));
+ const anchorX=oldX+rx*oldW,anchorY=oldY+ry*oldH;
+ previewZoom=Math.max(0.5,Math.min(8,previewZoom*factor));
+ const newW=1000/previewZoom,newH=650/previewZoom;
+ previewPanX=anchorX-rx*newW-(1000-newW)/2;
+ previewPanY=anchorY-ry*newH-(650-newH)/2;
+ applyPreviewZoom();
+}
+function bindDrawingViewer(){
+ const svg=$("preview");if(!svg||svg.dataset.viewerBound==="1")return;svg.dataset.viewerBound="1";
+ svg.addEventListener("wheel",e=>{e.preventDefault();zoomPreviewAt(e.deltaY<0?1.12:1/1.12,e.clientX,e.clientY)},{passive:false});
+ svg.addEventListener("pointerdown",e=>{if(e.button!==0)return;previewDrag={x:e.clientX,y:e.clientY,panX:previewPanX,panY:previewPanY};svg.style.cursor="grabbing";svg.setPointerCapture?.(e.pointerId)});
+ svg.addEventListener("pointermove",e=>{if(!previewDrag)return;const r=svg.getBoundingClientRect();previewPanX=previewDrag.panX-(e.clientX-previewDrag.x)*(1000/previewZoom)/Math.max(1,r.width);previewPanY=previewDrag.panY-(e.clientY-previewDrag.y)*(650/previewZoom)/Math.max(1,r.height);applyPreviewZoom()});
+ const stop=e=>{previewDrag=null;svg.style.cursor="grab";if(e&&svg.hasPointerCapture?.(e.pointerId))svg.releasePointerCapture(e.pointerId)};
+ svg.addEventListener("pointerup",stop);svg.addEventListener("pointercancel",stop);svg.addEventListener("lostpointercapture",()=>{previewDrag=null;svg.style.cursor="grab"});
+}
+$("zoomIn").addEventListener("click",()=>zoomPreviewAt(1.25));
+$("zoomOut").addEventListener("click",()=>zoomPreviewAt(1/1.25));
+$("zoomReset").addEventListener("click",()=>{previewZoom=1;previewPanX=0;previewPanY=0;applyPreviewZoom()});
 $("exportA3Pdf").addEventListener("click",exportA3LandscapePdf);
+$("viewDrawing").onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab==="previewTab"));document.querySelectorAll(".side-btn").forEach(x=>x.classList.toggle("active",x.dataset.sideTab==="previewTab"));document.querySelectorAll(".tabpane").forEach(x=>x.classList.toggle("hidden",x.id!=="previewTab"));renderPreview();};
 function renderPreview(){
  const s=readSettings(),svg=$("preview"),W=1000,H=650,pad=48;
  const scale=Math.min((W-2*pad)/Math.max(1,s.roomX),(H-2*pad)/Math.max(1,s.roomY)),rw=s.roomX*scale,rh=s.roomY*scale,ox=(W-rw)/2,oy=(H-rh)/2;
