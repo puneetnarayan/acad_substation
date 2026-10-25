@@ -30,7 +30,7 @@ jobs:
           if ! git diff --cached --quiet; then
             git commit -m "Build substation drawing from latest input"
             git pull --rebase origin main
-          git push
+            git push
           else
             echo "Generated artifacts already match source input."
           fi
