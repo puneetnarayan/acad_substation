@@ -1,41 +1,33 @@
 # ACAD Substation Layout Studio
 
-**Live Vercel deployment:** https://acad-substation.vercel.app  
-**GitHub repository:** https://github.com/puneetnarayan/acad_substation
+**Live app:** https://acad-substation.vercel.app  
+**Repository:** https://github.com/puneetnarayan/acad_substation
 
-A static JavaScript/HTML prototype for preparing panel schedules and a substation room plan preview, then exporting project data for a local AutoCAD workflow.
+Static HTML/JavaScript engineering layout prototype for a 75,000 × 25,000 mm substation room with four 2,000 mm cutout strips, four panel rows, AHU area reservation, panel/opening/bus-duct inputs, geometry preview and CAD exports.
 
-## Features
-- Panel schedule editor with 30 illustrative sample panels
-- Room dimensions and lineup controls
-- Building floor/level field (for example, G + 1 or G + 3) and cellar/basement location
-- Allocated site dimensions and reserved free margins on all four sides
-- Men's and women's toilet dimensions, maintenance office dimensions, and support-space location
-- Doors/windows and HT/LV bus-duct entry tables
-- Live SVG plan preview
-- Browser-local autosave (localStorage)
-- Export panels CSV, project JSON, and CSV bundle
-- Download a starter AutoLISP routine for local AutoCAD testing
-- 30-row sample CSV at `samples/panels_sample_30.csv`
+## Shared drawing integration
 
-## Run locally
-Open `index.html` in a modern browser. No build step or backend is required.
+- Stable DXF: [generated/substation_layout.dxf](generated/substation_layout.dxf) — opens in AutoCAD; use **Save As → DWG** for a native DWG file.
+- Stable JSON hand-off: [generated/substation_layout.json](generated/substation_layout.json) — panel identifiers, row numbers, X/Y coordinates, dimensions, openings, bus ducts and project settings.
+- Source input: [input/substation_layout.json](input/substation_layout.json). This contains the illustrative sample until new project data is published.
+- Raw DXF URL: https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf
+- Raw JSON URL: https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.json
 
-## Vercel
-The app has been deployed to Vercel as a static site. The deployment is based on the `main` branch snapshot. Confirm the Vercel Git integration is connected if you want every future GitHub push to trigger automatic redeployment.
+GitHub Actions runs `scripts/generate-layout.mjs` when `input/substation_layout.json` changes and commits the refreshed DXF and JSON artifacts. This also supports replacing the source file directly in GitHub; the workflow then updates the stable drawing paths. The default committed DXF is generated from illustrative sample data.
+
+In the web app, upload a panel CSV or exported project JSON, then use **Publish latest to GitHub**. First use requires a GitHub fine-grained token with **Contents: Read and write** permission scoped only to `puneetnarayan/acad_substation`. The static app holds the token in the current browser tab session only; it is never committed to the repository. Once connected in that tab, project edits and new uploads schedule publication automatically. The workflow then rebuilds the stable artifacts.
 
 ## AutoCAD workflow
-1. Export the panel CSV from the browser.
-2. Download `acad_substation.lsp` using the GUI button, or use the LISP file in this repository.
-3. In full AutoCAD for Windows, use APPLOAD to load the LISP file.
-4. Run `ACAD_SUBSTATION` and select the exported CSV.
 
-The included LISP is a starter prototype: it draws panel footprints and labels only. It does not yet generate the room outline, dimensions, openings, detailed cutouts, bus ducts, or elevations. Validate the output on a test drawing before use. Those features are planned for subsequent iterations.
+1. Open `generated/substation_layout.dxf` in AutoCAD 2026.
+2. Review the room outline, cutout strips, panel footprints, labels, AHU area, openings, bus duct symbols and dimension guide lines.
+3. Verify rows, access and all approved engineering dimensions.
+4. Save a native copy as DWG only after review.
 
-## Standards basis and engineering limitation
-Use the applicable Central Electricity Authority (Measures relating to Safety and Electric Supply) Regulations, 2023, including amendments in force (the CEA site lists a 2026 amendment), relevant BIS/National Building Code provisions, local building and fire rules, utility requirements, and equipment-manufacturer instructions/clearances. Sample dimensions are illustrative planning placeholders, not statutory minimums or a declaration of compliance. Verify manufacturer drawings, working clearances, cable/bus-duct constraints, access/egress, wet-service separation, local approvals, drawing units and layer standards. The tool does not certify design compliance.
+## Important limits
 
-The current AutoLISP remains a starter prototype that draws panel footprints and labels only. Building-level, cellar, allocated-area, margin and support-space fields are captured in project settings/JSON; they are not yet automatically laid out as complete floor plans or elevation drawings.
+The committed DXF is a CAD exchange drawing, not a native DWG. Generated geometry has not been independently opened and checked in AutoCAD 2026. Dimension objects are currently guide lines and labels rather than a complete production dimension-style setup. Electrical, fire, structural, HVAC and statutory compliance require qualified engineering review. Sample dimensions and equipment data are illustrative until replaced by approved inputs.
 
-## Data privacy
-Project entries are stored in the current browser's localStorage and are not uploaded to an application backend. Export a JSON backup before clearing browser data.
+## Data handling
+
+Without GitHub publication, browser edits remain in browser localStorage. Published project inputs are committed to this repository so the other application can read the shared outputs. Do not publish confidential project data to a public repository.
