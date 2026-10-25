@@ -17,6 +17,15 @@ GitHub Actions runs `scripts/generate-layout.mjs` when `input/substation_layout.
 
 In the web app, upload a panel CSV or exported project JSON, then use **Publish latest to GitHub**. First use requires a GitHub fine-grained token with **Contents: Read and write** permission scoped only to `puneetnarayan/acad_substation`. The static app holds the token in the current browser tab session only; it is never committed to the repository. Once connected in that tab, project edits and new uploads schedule publication automatically. The workflow then rebuilds the stable artifacts.
 
+## In-app drawing preview and PDF
+- Open **Plan preview** to inspect the current master layout directly in the app.
+- Use **Zoom in**, **Zoom out**, and **Fit drawing** to inspect details.
+- **Export A3 Landscape PDF** opens a print-ready vector drawing. Choose **Save as PDF** in the browser print dialog and confirm paper size A3 and orientation Landscape.
+- The preview is rendered from the same current project model used by the DXF generator; it updates when layout inputs change. The PDF is vector-based for sharp lines/text. It is a review output, not a substitute for checking the generated DXF/DWG in AutoCAD.
+
+## Master drawing rule
+The ACAD layout is the physical-layout master. Cable route definition and cable scheduling must reference reviewed panel coordinates, room geometry, openings, cut-outs and busducts from this layout. Do not infer routes from sample data or treat the illustrative committed DXF as an approved project drawing. The cable app must keep unresolved geometry/route inputs flagged until they are supplied and reviewed.
+
 ## AutoCAD workflow
 
 1. Open `generated/substation_layout.dxf` in AutoCAD 2026.
