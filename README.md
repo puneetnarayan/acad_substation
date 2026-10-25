@@ -8,6 +8,9 @@ A static JavaScript/HTML prototype for preparing panel schedules and a substatio
 ## Features
 - Panel schedule editor with 30 illustrative sample panels
 - Room dimensions and lineup controls
+- Building floor/level field (for example, G + 1 or G + 3) and cellar/basement location
+- Allocated site dimensions and reserved free margins on all four sides
+- Men's and women's toilet dimensions, maintenance office dimensions, and support-space location
 - Doors/windows and HT/LV bus-duct entry tables
 - Live SVG plan preview
 - Browser-local autosave (localStorage)
@@ -29,8 +32,10 @@ The app has been deployed to Vercel as a static site. The deployment is based on
 
 The included LISP is a starter prototype: it draws panel footprints and labels only. It does not yet generate the room outline, dimensions, openings, detailed cutouts, bus ducts, or elevations. Validate the output on a test drawing before use. Those features are planned for subsequent iterations.
 
-## Important engineering limitation
-Sample dimensions are illustrative only. Verify all manufacturer drawings, working clearances, cable/bus-duct constraints, access/egress, statutory requirements, drawing units and layer standards. The tool does not certify design compliance.
+## Standards basis and engineering limitation
+Use the applicable Central Electricity Authority (Measures relating to Safety and Electric Supply) Regulations, 2023, including amendments in force (the CEA site lists a 2026 amendment), relevant BIS/National Building Code provisions, local building and fire rules, utility requirements, and equipment-manufacturer instructions/clearances. Sample dimensions are illustrative planning placeholders, not statutory minimums or a declaration of compliance. Verify manufacturer drawings, working clearances, cable/bus-duct constraints, access/egress, wet-service separation, local approvals, drawing units and layer standards. The tool does not certify design compliance.
+
+The current AutoLISP remains a starter prototype that draws panel footprints and labels only. Building-level, cellar, allocated-area, margin and support-space fields are captured in project settings/JSON; they are not yet automatically laid out as complete floor plans or elevation drawings.
 
 ## Data privacy
 Project entries are stored in the current browser's localStorage and are not uploaded to an application backend. Export a JSON backup before clearing browser data.
