@@ -20,21 +20,21 @@ const lane=(roomY-startY-cutN*cutW)/rowCount;
 const sourcePanels=(raw.panels||[]).filter(p=>String(p.Draw??p.draw??"Yes").toLowerCase()!=="no")
  .map((p,i)=>({...p,Panel_ID:p.Panel_ID||p.id||("PNL-"+String(i+1).padStart(2,"0")),Panel_Type:p.Panel_Type||p.type||"Other",Service:p.Service||p.service||"",Width_mm:Number(p.Width_mm??p.width??800),Depth_mm:Number(p.Depth_mm??p.depth??1200),Height_mm:Number(p.Height_mm??p.height??s.defaultHeight??2200),Gap_After_mm:Number(p.Gap_After_mm??p.gap??s.defaultGap??0),Draw:"Yes"}))
  .sort((a,b)=>Number(a.Lineup_Order??a.order??0)-Number(b.Lineup_Order??b.order??0));
-let row=1,cursor=startX,previousCategory="",used=0;
+let row=1,cursor=startX,previousCategory="",previousWidth=0,used=0;
 const placements=[];
 for(const p of sourcePanels){
  const category=String(p.category||p.Panel_Type||p.type||"Other");
- const changed=!!previousCategory&&category!==previousCategory;
- const gap=used?(changed?catGap:Math.max(0,p.Gap_After_mm)):0;
- if(used&&cursor+gap+p.Width_mm>roomX-1000){row++;cursor=startX;previousCategory="";used=0;}
+ let changed=!!previousCategory&&category!==previousCategory;
+ let longPanelGap=(p.Width_mm>2000||previousWidth>2000)?800:0;
+ let actualGap=used?(changed?catGap:Math.max(0,p.Gap_After_mm,longPanelGap)):0;
+ if(used&&cursor+actualGap+p.Width_mm>roomX-1000){row++;cursor=startX;previousCategory="";previousWidth=0;used=0;changed=false;actualGap=0;}
  if(row>rowCount)row=rowCount;
- const actualGap=used?(previousCategory&&previousCategory!==category?catGap:Math.max(0,p.Gap_After_mm)):0;
  cursor+=actualGap;
  const y=cutN?startY+(row-1)*(lane+cutW)+(cutW-p.Depth_mm)/2:startY+(row-1)*lane+(lane-p.Depth_mm)/2;
  const x=s.direction==="-x"?roomX-cursor-p.Width_mm:cursor;
  placements.push({...p,Row:row,X_mm:x,Y_mm:y,Category_Gap_mm:actualGap,Out_Of_Bounds:x<0||y<0||x+p.Width_mm>roomX||y+p.Depth_mm>roomY,Category:category});
- cursor+=p.Width_mm+Math.max(0,p.Gap_After_mm);
- previousCategory=category;used++;
+ cursor+=p.Width_mm;
+ previousCategory=category;previousWidth=p.Width_mm;used++;
 }
 const pair=(code,value)=>String(code)+"\n"+String(value)+"\n";
 function line(x1,y1,x2,y2,layer){return pair(0,"LINE")+pair(8,layer)+pair(10,x1)+pair(20,y1)+pair(30,0)+pair(11,x2)+pair(21,y2)+pair(31,0);}
