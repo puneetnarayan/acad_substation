@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source_app": "acad_substation",
-  "updated_at": "2026-10-25T15:15:25.684Z",
+  "updated_at": "2026-10-25T15:15:48.873Z",
   "sample_data": true,
   "drawing_path": "generated/substation_layout.dxf",
   "drawing_url": "https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf",
@@ -602,6 +602,7 @@
     "Checked-in illustrative sample layout used until a new input JSON or panel CSV is uploaded.",
     "DXF is an ASCII exchange drawing; open it in AutoCAD and save as DWG.",
     "Verify panel locations and clearances before engineering use.",
+    "Default source sample refreshed to rebuild DXF after label-sanitization fix.",
     "Generated automatically by scripts/generate-layout.mjs when input/substation_layout.json changes.",
     "DXF is an exchange drawing; open it in AutoCAD and save as native DWG.",
     "Engineering review is required before use."
