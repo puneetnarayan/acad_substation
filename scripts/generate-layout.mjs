@@ -36,10 +36,22 @@ function text(x,y,height,value,layer="TEXT"){return pairs(0,"TEXT")+pairs(8,laye
 const entities = [rect(0,0,roomX,roomY,"WALL"), text(roomX/2,roomY+600,250,(settings.projectName || "SUBSTATION")+" - PLAN")];
 for(let i=0;i<n;i++){const y=i*(lane+cutW);entities.push(rect(0,y,roomX,cutW,"CUTOUT"),text(roomX/2,y+cutW/2,180,"CUTOUT "+(i+1)+" - "+cutW+" mm","CUTOUT"));}
 for(const p of placements){entities.push(rect(p.X_mm,p.Y_mm,p.Width_mm,p.Depth_mm,"PANEL"),text(p.X_mm+p.Width_mm/2,p.Y_mm+p.Depth_mm/2,Math.max(80,Math.min(150,p.Width_mm/6)),p.Panel_ID+" R"+p.Row));}
+if(String(settings.ahuRequired ?? "Yes").toLowerCase()!=="no" && Number(settings.ahuX)>0 && Number(settings.ahuY)>0){
+ const aw=Number(settings.ahuX), ah=Number(settings.ahuY), cl=Number(settings.ahuClearance ?? 1000), loc=String(settings.ahuLocation ?? "North-east");
+ let ax=roomX-aw-cl, ay=roomY-ah-cl;
+ if(loc==="North-west"){ax=cl;ay=roomY-ah-cl;}
+ else if(loc==="South-east"){ax=roomX-aw-cl;ay=cl;}
+ else if(loc==="South-west"){ax=cl;ay=cl;}
+ if(["North-east","North-west","South-east","South-west"].includes(loc)){
+  entities.push(rect(ax,ay,aw,ah,"AHU"),text(ax+aw/2,ay+ah/2,180,"AHU AREA - "+(settings.ahuLevel||"LEVEL TO CONFIRM"),"AHU"));
+ } else {
+  entities.push(text(roomX/2,roomY+1100,180,"AHU: "+loc+" / "+(settings.ahuLevel||"LEVEL TO CONFIRM"),"AHU"));
+ }
+}
 for(const o of (raw.openings || [])){const position=Number(o.position ?? o.Position_mm ?? 0),width=Number(o.width ?? o.Width_mm ?? 0);if(o.wall==="South"||o.wall==="North"||o.Wall==="South"||o.Wall==="North"){const y=(o.wall||o.Wall)==="South"?0:roomY;entities.push(line(position,y-50,position+width,y+50,"OPENING"),text(position+width/2,y+100,120,o.id||o.Opening_ID||"OPENING","OPENING"));}}
 for(const b of (raw.busDucts || raw.buses || [])){const x=Number(b.x ?? b.X_mm ?? 0),y=Number(b.y ?? b.Y_mm ?? 0),w=Number(b.width ?? b.Width_mm ?? 0),d=Number(b.depth ?? b.Depth_mm ?? 0);entities.push(rect(x-w/2,y-d/2,w,d,"BUSDuct"),text(x,y,120,b.id||b.BusDuct_ID||"BUSDUCT","BUSDuct"));}
 entities.push(line(0,-800,roomX,-800,"DIMENSION"),line(-800,0,-800,roomY,"DIMENSION"),text(roomX/2,-700,150,"Room X "+roomX+" mm","DIMENSION"),text(-700,roomY/2,150,"Room Y "+roomY+" mm","DIMENSION"));
-const layers=["WALL","CUTOUT","PANEL","TEXT","DIMENSION","OPENING","BUSDuct"];
+const layers=["WALL","CUTOUT","PANEL","TEXT","DIMENSION","OPENING","BUSDuct","AHU"];
 let dxf=pairs(0,"SECTION")+pairs(2,"HEADER")+pairs(9,"$ACADVER")+pairs(1,"AC1009")+pairs(0,"ENDSEC")+pairs(0,"SECTION")+pairs(2,"TABLES")+pairs(0,"TABLE")+pairs(2,"LAYER")+pairs(70,layers.length);
 layers.forEach((l,i)=>{dxf+=pairs(0,"LAYER")+pairs(2,l)+pairs(70,0)+pairs(62,i===0?7:i===1?30:i===2?5:7)+pairs(6,"CONTINUOUS");});
 dxf+=pairs(0,"ENDTAB")+pairs(0,"ENDSEC")+pairs(0,"SECTION")+pairs(2,"ENTITIES")+entities.join("")+pairs(0,"ENDSEC")+pairs(0,"EOF");
