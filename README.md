@@ -1,5 +1,8 @@
 # ACAD Substation Layout Studio
 
+**Live Vercel deployment:** https://acad-substation.vercel.app  
+**GitHub repository:** https://github.com/puneetnarayan/acad_substation
+
 A static JavaScript/HTML prototype for preparing panel schedules and a substation room plan preview, then exporting project data for a local AutoCAD workflow.
 
 ## Features
@@ -10,16 +13,17 @@ A static JavaScript/HTML prototype for preparing panel schedules and a substatio
 - Browser-local autosave (localStorage)
 - Export panels CSV, project JSON, and CSV bundle
 - Download a starter AutoLISP routine for local AutoCAD testing
+- 30-row sample CSV at `samples/panels_sample_30.csv`
 
 ## Run locally
 Open `index.html` in a modern browser. No build step or backend is required.
 
 ## Vercel
-This is a static site. Import `puneetnarayan/acad_substation` into Vercel with the project root at the repository root and no build command; the output is the repository root. If Vercel asks for a framework, choose Other.
+The app has been deployed to Vercel as a static site. The deployment is based on the `main` branch snapshot. Confirm the Vercel Git integration is connected if you want every future GitHub push to trigger automatic redeployment.
 
 ## AutoCAD workflow
 1. Export the panel CSV from the browser.
-2. Download `acad_substation.lsp` using the GUI button.
+2. Download `acad_substation.lsp` using the GUI button, or use the LISP file in this repository.
 3. In full AutoCAD for Windows, use APPLOAD to load the LISP file.
 4. Run `ACAD_SUBSTATION` and select the exported CSV.
 
