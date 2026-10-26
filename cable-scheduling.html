@@ -215,7 +215,42 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
     pin.textContent = pinned ? '📌' : '📍';
     if (pinned) sidebar.classList.remove('collapsed');
   });
-  function renderModule(page) {
+  
+/* Dynamic recalculation and editable data-grid support. */
+let calculationRefreshTimer=null;
+function refreshCalculationsNow(){
+ try{
+  if(typeof runValidation==='function')runValidation();
+  if(typeof loadSampleData==='function'){
+   const cables=sampleData.Cable_Schedule||[],equipment=sampleData.Equipment_Master||[],routes=sampleData.Route_Master||[];
+   const el=id=>document.getElementById(id);
+   if(el('cableCount'))el('cableCount').textContent=cables.length;
+   if(el('equipmentCount'))el('equipmentCount').textContent=equipment.length;
+   if(el('routeCount'))el('routeCount').textContent=routes.length;
+  }
+  if(typeof saveActiveEcrWorkspace==='function')saveActiveEcrWorkspace();
+ }catch(err){console.error('Dynamic calculation refresh failed',err);}
+}
+function scheduleCalculationRefresh(){
+ clearTimeout(calculationRefreshTimer);
+ calculationRefreshTimer=setTimeout(refreshCalculationsNow,120);
+}
+document.addEventListener('input',event=>{
+ const cell=event.target.closest?.('[data-edit-sheet][data-edit-row][data-edit-field]');
+ if(!cell)return;
+ const sheet=cell.dataset.editSheet,row=Number(cell.dataset.editRow),field=cell.dataset.editField;
+ if(!Array.isArray(sampleData[sheet])||!sampleData[sheet][row])return;
+ const value=cell.innerText.replace(/\u00a0/g,' ').trim();
+ sampleData[sheet][row][field]=value;
+ cell.classList.toggle('flagged-cell',value==='');
+ cell.title=value===''?'Missing input — requires review':'Edited; calculations refresh automatically';
+ scheduleCalculationRefresh();
+});
+document.addEventListener('change',event=>{
+ if(event.target.matches('input,select,textarea'))scheduleCalculationRefresh();
+});
+
+function renderModule(page) {
     const map = {
       'Equipment Master':'Equipment_Master','Cable Specifications':'Cable_Spec_Master',
       'Cable Schedule':'Cable_Schedule','Route Definition':'Route_Master',
@@ -228,7 +263,7 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
     const sheet = map[page];
     const rows = sampleData[sheet] || [];
     const keys = rows.length ? Object.keys(rows[0]) : [];
-    const table = rows.length ? '<div class="table-wrap"><table><thead><tr>'+keys.map(k=>'<th>'+escapeHtml(k)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+keys.map(k=>{const v=r[k];const blank=v===undefined||v===null||String(v).trim()==='';return '<td class="'+(blank?'flagged-cell':'')+'" title="'+(blank?'Missing input — requires review':'')+'">'+(blank?'MISSING':escapeHtml(String(v)))+'</td>';}).join('')+'</tr>').join('')+'</tbody></table></div>' : '<div class="empty-state">No sample records are available for this module yet. Import a workbook or load sample data.</div>';
+    const table = rows.length ? '<div class="table-wrap"><table><thead><tr>'+keys.map(k=>'<th>'+escapeHtml(k)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+keys.map(k=>{const v=r[k];const blank=v===undefined||v===null||String(v).trim()==='';return '<td contenteditable="true" spellcheck="false" data-edit-sheet="'+escapeHtml(sheet||'')+'" data-edit-row="'+(rows.indexOf(r))+'" data-edit-field="'+escapeHtml(k)+'" class="'+(blank?'flagged-cell':'')+'" title="Editable field — changes recalculate checks automatically'+(blank?'; missing input requires review':'')+'">'+(blank?'':escapeHtml(String(v)))+'</td>';}).join('')+'</tr>').join('')+'</tbody></table></div>' : '<div class="empty-state">No sample records are available for this module yet. Import a workbook or load sample data.</div>';
     const descriptions = {
       'Substation Layout':'Loads the latest published panel layout from ACAD Substation Layout Studio, with stable links to the shared DXF drawing and JSON sidecar.',
       'Tray Allocation':'Propose assignments only when cable outside diameter, route-to-tray candidates and usable tray capacity are supplied. Existing assignments are preserved; unresolved cables remain unevaluated.',
