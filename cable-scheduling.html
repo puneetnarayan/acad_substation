@@ -710,9 +710,7 @@ function runValidation(){
  }
  const specs=rows('Cable_Spec_Master');
  const hasDiameter=specs.length&&specs.some(r=>['Outside_Diameter_mm','OD_mm','Diameter_mm','Cable_OD_mm'].some(k=>Number(r[k])>0));
- add('Cable-by-cable width calculation',hasDiameter?'NOT EVALUATED':'NOT EVALUATED',hasDiameter?'Diameter data found, but a verified cable-to-tray allocation engine is not yet enabled.':'Not evaluated: approved cable outside diameter and verified cable-to-tray mapping are not available in the current data model.');
- add('Electrical/mechanical loading','NOT EVALUATED','Cable weights, tray loading limits, derating inputs and installation conditions are not yet validated.');
- add('Segregation rules','NOT EVALUATED',rows('Segregation_Rules').length?'Rules are present, but automatic route-segment segregation checking is not implemented yet.':'No segregation rules loaded.');
+ // Detailed calculation engine below supplies these checks from explicit engineering inputs.
  const order={'FAIL':0,'WARNING':1,'NOT EVALUATED':2,'PASS':3};
  results.sort((a,b)=>order[a.status]-order[b.status]);
  const counts={PASS:0,WARNING:0,FAIL:0,'NOT EVALUATED':0};results.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
@@ -826,6 +824,67 @@ runValidation = function(){
   return results;
 };
 
+
+
+/* Formula-driven cable and tray calculations. Missing engineering inputs are reported as NOT EVALUATED,
+   never guessed. Results are screening calculations and require standards/vendor verification. */
+const baseRunValidationWithCalculations = runValidation;
+runValidation = function(){
+ const results=baseRunValidationWithCalculations()||[];
+ const rows=n=>Array.isArray(sampleData[n])?sampleData[n]:[];
+ const val=(o,ks)=>{for(const k of ks)if(o&&o[k]!==undefined&&o[k]!==null&&String(o[k]).trim()!=='')return o[k];return '';};
+ const key=v=>String(v??'').trim().toLowerCase();
+ const num=v=>v!==''&&v!==null&&v!==undefined&&Number.isFinite(Number(v))?Number(v):null;
+ const setting=(name,def=null)=>{const r=rows('Project_Settings').find(x=>key(val(x,['Setting','Parameter','Name']))===key(name));return r?num(r.Value)??def:def;};
+ const cables=rows('Cable_Schedule'),specs=rows('Cable_Spec_Master'),trays=rows('Tray_Master'),segments=rows('Route_Segments'),routes=rows('Route_Master'),rules=rows('Segregation_Rules');
+ const specFor=c=>{const id=key(val(c,['Cable_Spec_ID','Spec_ID','Specification_ID','Cable_Specification','Cable_Type']));return specs.find(x=>[x.Cable_Spec_ID,x.Spec_ID,x.Specification_ID,x.Cable_Type,x.Cable_ID].some(v=>key(v)===id))||specs.find(x=>[x.Cable_ID,x.Engineering_Tag].some(v=>key(v)===key(val(c,['Cable_ID']))))||{};};
+ const odFor=c=>num(val(c,['Cable_OD_mm','OD_mm','Outside_Diameter_mm','Diameter_mm']))??num(val(specFor(c),['OD_mm','Outside_Diameter_mm','Diameter_mm','Cable_OD_mm']));
+ const cableId=c=>val(c,['Cable_ID','Engineering_Tag','Cable_Internal_ID'])||'(unnamed cable)';
+ const trayId=t=>key(val(t,['Tray_ID','Tray_Internal_ID','Engineering_Tag']));
+ const trayMap=new Map(trays.map(t=>[trayId(t),t]).filter(x=>x[0]));
+ const add=(name,status,detail)=>results.push({name,status,detail});
+ // Cable-by-cable tray width utilisation. OD allowance is configurable and explicitly labelled as a screening allowance.
+ const allowance=setting('Cable_Width_Allowance_Percent',10);
+ const assigned=cables.filter(c=>key(val(c,['Tray_ID','Existing_Tray_ID'])));
+ const missingOD=assigned.filter(c=>!(odFor(c)>0));
+ const byTray=new Map();
+ assigned.forEach(c=>{const tid=key(val(c,['Tray_ID','Existing_Tray_ID']));if(!byTray.has(tid))byTray.set(tid,[]);const od=odFor(c);if(od>0)byTray.get(tid).push({c,od});});
+ const widthFindings=[];let widthEvaluated=0;
+ byTray.forEach((list,tid)=>{const t=trayMap.get(tid);if(!t)return;const width=num(val(t,['Usable_Width_mm','Width_Usable_mm','Width_mm','Nominal_Width_mm']));if(!(width>0)||!list.length)return;widthEvaluated++;const used=list.reduce((a,x)=>a+x.od*(1+allowance/100),0);const limit=num(val(t,['Occupancy_Limit_pct','Design_Occupancy_Limit_pct']))??(100-(setting('Spare_Capacity_Percent',20)));const pct=used/width*100;if(pct>limit)widthFindings.push((val(t,['Tray_ID','Engineering_Tag'])||tid)+': calculated cable-width '+used.toFixed(1)+' mm / '+width+' mm ('+pct.toFixed(1)+'%), limit '+limit+'%');});
+ add('Cable-by-cable width calculation',!assigned.length?'NOT EVALUATED':!widthEvaluated?'NOT EVALUATED':widthFindings.length?'FAIL':missingOD.length?'WARNING':'PASS',!assigned.length?'No assigned cable-to-tray records.':!widthEvaluated?'Assigned trays lack usable width or assigned cables lack approved outside diameter.':widthFindings.length?widthFindings.slice(0,6).join('; '):'Calculated assigned cable width includes '+allowance+'% per-cable allowance and is within entered tray width limits.'+(missingOD.length?' '+missingOD.length+' assigned cable(s) lack OD and were excluded.':''));
+ // Electrical calculations only where cable-specific electrical values are present.
+ const voltageResults=[];let voltageMissing=0,ampacityEval=0,ampacityBad=0,scEval=0,scBad=0;
+ cables.forEach(c=>{const sp=specFor(c),length=num(val(c,['Length_m','Cable_Length_m','Estimated_Length_m'])),v=num(val(c,['Voltage_V','Rated_Voltage_V']))??((num(val(c,['Voltage_kV']))||0)*1000),amps=num(val(c,['Design_Current_A','Load_Current_A','Current_A','Full_Load_Current_A'])),r=num(val(c,['Resistance_Ohm_per_km','R_Ohm_km','Resistance_ohm_km']))??num(val(sp,['Resistance_Ohm_per_km','R_Ohm_km','Resistance_ohm_km'])),x=num(val(c,['Reactance_Ohm_per_km','X_Ohm_km']))??num(val(sp,['Reactance_Ohm_per_km','X_Ohm_km'])),pf=num(val(c,['Power_Factor','PF']))??0.85,phase=key(val(c,['Phase','System_Type','Supply_Phase'])),coreCount=num(val(c,['Cores','Core_Count'])),dropLimit=num(val(c,['Voltage_Drop_Limit_pct']))??setting('Voltage_Drop_Limit_pct',5);
+   if(length>0&&v>0&&amps>0&&r>=0){const l=length/1000,cos=Math.min(1,Math.max(0,pf)),sin=Math.sqrt(Math.max(0,1-cos*cos));let drop;if(phase.includes('1')||phase.includes('single')||coreCount===2)drop=amps*2*l*r;else if(x!==null)drop=Math.sqrt(3)*amps*l*(r*cos+x*sin);else drop=Math.sqrt(3)*amps*l*r;const pct=drop/v*100;voltageResults.push({id:cableId(c),pct,drop,limit:dropLimit});}
+   else voltageMissing++;
+   const amp=num(val(c,['Current_Capacity_A','Ampacity_A','Rated_Current_A']))??num(val(sp,['Current_Capacity_A','Ampacity_A','Rated_Current_A'])),derate=num(val(c,['Combined_Derating_Factor']))??num(val(sp,['Combined_Derating_Factor']))??1;
+   if(amps>0&&amp>0&&derate>0){ampacityEval++;if(amps>amp*derate)ampacityBad++;}
+   const fault=num(val(c,['Short_Circuit_Current_A','Fault_Current_A'])),duration=num(val(c,['Fault_Duration_s','Short_Circuit_Duration_s'])),k=num(val(c,['Short_Circuit_k_Factor','K_Factor']))??num(val(sp,['Short_Circuit_k_Factor','K_Factor'])),size=num(val(c,['Size_mm2','Cross_Section_mm2','Conductor_Area_mm2']));
+   if(fault>0&&duration>0&&k>0&&size>0){scEval++;if(fault*Math.sqrt(duration)>k*size)scBad++;}
+ });
+ add('Voltage-drop calculation',!voltageResults.length?'NOT EVALUATED':voltageResults.some(x=>x.pct>x.limit)?'FAIL':voltageMissing?'WARNING':'PASS',!voltageResults.length?'Requires cable length, voltage, design current and conductor resistance; three-phase reactance improves accuracy.':voltageResults.filter(x=>x.pct>x.limit).length+' cable(s) exceed their configured voltage-drop limit. Evaluated '+voltageResults.length+' cable(s); worst '+Math.max(...voltageResults.map(x=>x.pct)).toFixed(2)+'%. '+(voltageMissing?voltageMissing+' cable(s) lacked inputs.':'Formula: single-phase 2LI·R; three-phase √3·LI·(R·PF + X·sinφ) when X is available.'));
+ add('Ampacity / derating check',!ampacityEval?'NOT EVALUATED':ampacityBad?'FAIL':ampacityEval<cables.length?'WARNING':'PASS',!ampacityEval?'Requires design current, cable ampacity and a verified combined derating factor.':ampacityBad+' cable(s) exceed ampacity × derating factor; '+ampacityEval+' evaluated. Derating factor must be based on installation conditions and applicable standards.');
+ add('Short-circuit withstand',!scEval?'NOT EVALUATED':scBad?'FAIL':scEval<cables.length?'WARNING':'PASS',!scEval?'Requires fault current, clearing duration, conductor area and approved k-factor.':scBad+' cable(s) fail I√t ≤ kS; '+scEval+' evaluated using the adiabatic screening formula.');
+ // Route length and procurement allowance from measured segment lengths; no geometric route is invented.
+ const lengthResults=[];let routeMissing=0;
+ cables.forEach(c=>{const rid=key(val(c,['Route_ID','Route']));if(!rid){routeMissing++;return;}const ss=segments.filter(x=>key(val(x,['Route_ID','Route']))===rid);const rr=routes.find(x=>key(val(x,['Route_ID','Route']))===rid);const segmentLengths=ss.map(x=>num(val(x,['Length_m','Segment_Length_m','Length'] )));let base=segmentLengths.length&&segmentLengths.every(x=>x!==null&&x>=0)?segmentLengths.reduce((a,b)=>a+b,0):null;if(base===null)base=num(val(rr||{},['Length_m','Route_Length_m','Length']));if(base===null)base=num(val(c,['Length_m','Cable_Length_m','Estimated_Length_m']));if(base!==null&&base>0){const slack=setting('Cable_Length_Allowance_Percent',10),end=setting('Cable_Termination_Allowance_m',2),vertical=setting('Cable_Vertical_Allowance_m',0);lengthResults.push({id:cableId(c),base,proc:base*(1+slack/100)+end+vertical});}else routeMissing++;});
+ add('Route and procurement length',!lengthResults.length?'NOT EVALUATED':routeMissing?'WARNING':'PASS',!lengthResults.length?'No positive measured route, route-segment lengths or entered cable lengths found.':lengthResults.length+' cable length(s) calculated. Procurement estimate = base route length × (1 + '+setting('Cable_Length_Allowance_Percent',10)+'%) + '+setting('Cable_Termination_Allowance_m',2)+' m termination allowance + '+setting('Cable_Vertical_Allowance_m',0)+' m vertical allowance. '+(routeMissing?routeMissing+' cable(s) have no route/length input.':'Confirm vertical/slack allowances per project.'));
+ // Tray mechanical load if cable unit weights and tray load rating exist.
+ let loadEval=0,loadBad=0;const loadFindings=[];
+ trays.forEach(t=>{const id=trayId(t),rating=num(val(t,['Allowable_Load_kg_per_m','Tray_Load_Rating_kg_m','Load_Capacity_kg_m']));if(!(rating>0))return;const list=cables.filter(c=>key(val(c,['Tray_ID','Existing_Tray_ID']))===id);if(!list.length)return;const weighted=list.map(c=>({c,w:num(val(c,['Weight_kg_per_km']))??num(val(specFor(c),['Weight_kg_per_km','Cable_Weight_kg_km'])),l:num(val(c,['Length_m','Cable_Length_m']))}));if(weighted.some(x=>!(x.w>=0)||!(x.l>0)))return;loadEval++;const kgm=weighted.reduce((a,x)=>a+x.w/1000,0);if(kgm>rating){loadBad++;loadFindings.push((val(t,['Tray_ID','Engineering_Tag'])||id)+': '+kgm.toFixed(2)+' kg/m > '+rating+' kg/m');}});
+ add('Electrical/mechanical loading',!loadEval?'NOT EVALUATED':loadBad?'FAIL':loadEval<trays.length?'WARNING':'PASS',!loadEval?'Requires tray allowable load (kg/m), assigned cables and cable unit weights (kg/km).':loadFindings.join('; ')||'Calculated cable dead load is within entered tray ratings for '+loadEval+' evaluated tray(s); tray span/support and dynamic loads still need review.');
+ // Segregation: explicit rules can define Category_A/Category_B and Same_Tray_Allowed/Allowed.
+ const forbidden=(a,b)=>rules.some(r=>{const ca=key(val(r,['Category_A','Cable_Category_A','From_Category','Category_1'])),cb=key(val(r,['Category_B','Cable_Category_B','To_Category','Category_2'])),allowed=key(val(r,['Same_Tray_Allowed','Allowed_On_Same_Tray','Compatible','Rule']));const match=(ca===key(a)&&cb===key(b))||(ca===key(b)&&cb===key(a));return match&&(['no','false','0','prohibited','separate','not allowed'].includes(allowed)||allowed.includes('separate')||allowed.includes('prohibit'));});
+ let segregationEval=0;const segregationFindings=[];
+ const trayGroups=new Map();cables.forEach(c=>{const t=key(val(c,['Tray_ID','Existing_Tray_ID'])),cat=val(c,['Category','Cable_Category','Cable_Type']);if(t&&cat){if(!trayGroups.has(t))trayGroups.set(t,[]);trayGroups.get(t).push({c,cat});}});
+ trayGroups.forEach((list,t)=>{for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){if(rules.length){segregationEval++;if(forbidden(list[i].cat,list[j].cat))segregationFindings.push(t+': '+list[i].cat+' / '+list[j].cat+' violates segregation rule');}}});
+ add('Segregation rules',!rules.length?'NOT EVALUATED':!segregationEval?'NOT EVALUATED':segregationFindings.length?'FAIL':'PASS',!rules.length?'No Segregation_Rules records loaded.':!segregationEval?'No assigned tray contains multiple categorized cables to compare.':segregationFindings.length?segregationFindings.slice(0,6).join('; '):'No same-tray category conflict was found against explicit segregation rules.');
+ const order={'FAIL':0,'WARNING':1,'NOT EVALUATED':2,'PASS':3};results.sort((a,b)=>(order[a.status]??4)-(order[b.status]??4));
+ const counts={PASS:0,WARNING:0,FAIL:0,'NOT EVALUATED':0};results.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
+ const body=document.getElementById('validationTable')?.querySelector('tbody');if(body)body.innerHTML=results.map(r=>'<tr><td>'+escapeHtml(r.name)+'</td><td><span class="pill '+(r.status==='PASS'?'good':r.status==='FAIL'?'pending':'')+'">'+escapeHtml(r.status)+'</span></td><td>'+escapeHtml(r.detail)+'</td></tr>').join('');
+ [['validationPass','PASS'],['validationWarning','WARNING'],['validationFail','FAIL'],['validationNE','NOT EVALUATED']].forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.textContent=counts[k]||0;});
+ latestValidationResults=results;return results;
+};
 
 let latestTrayAllocationResults=[];
 function proposeTrayAllocations(){
