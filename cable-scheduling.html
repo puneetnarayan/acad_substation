@@ -238,7 +238,7 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
       'Drawing & Layout Inputs':'Automatically loads the latest published substation layout JSON and offers a stable link to the generated DXF drawing. Sample drawing is used whenever no newer file is published.'
     };
     document.getElementById('topTitle').textContent=page;
-    document.getElementById('pageContent').innerHTML='<div class="page-head"><div><h1>'+escapeHtml(page)+'</h1><p>'+escapeHtml(descriptions[page] || 'Review and validate the records loaded into this workspace.')+'</p></div><div class="actions"><button class="btn" id="moduleDownload">Download Excel</button>'+(page==='Feeder & Cable Generation' ? '<button class="btn primary" id="generateDraftCables">Generate Draft Cables</button>' : '')+(page==='Tray Allocation' ? '<button class="btn primary" id="runTrayAllocation">Propose Tray Allocation</button><button class="btn" id="downloadAllocationReport">Download Allocation CSV</button>' : '')+(page==='Drawing & Layout Inputs' || page==='Substation Layout' ? '<button class="btn" id="layoutInputHelp">Supported Inputs</button><button class="btn primary" id="loadPublishedLayout">Refresh latest layout</button><a class="btn" href="https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf" target="_blank" rel="noopener">Open latest DXF</a><a class="btn" href="https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.json" target="_blank" rel="noopener">Open layout JSON</a><button class="btn" id="addDrawingReference">Add Drawing / Layout</button>' : '')+'<button class="btn" id="backDashboard">Dashboard</button></div></div>'+(page==='Drawing & Layout Inputs'||page==='Substation Layout' ? '<div class="card" id="drawingAvailabilityCard" style="margin-bottom:10px;background:#f8fbfd"><div class="section-title">GitHub drawing availability</div><div id="drawingAvailabilityStatus" class="muted">Checking acad_substation repository…</div><div id="publishedLayoutPreview" style="margin-top:7px;min-height:28px"></div><div class="actions" style="margin-top:6px"><a class="btn primary" href="https://github.com/puneetnarayan/acad_substation/tree/main/generated" target="_blank" rel="noopener">View generated files</a><a class="btn" href="https://github.com/puneetnarayan/acad_substation/blob/main/generated/substation_layout.dxf" target="_blank" rel="noopener">DXF file on GitHub</a><a class="btn" href="https://github.com/puneetnarayan/acad_substation/blob/main/generated/substation_layout.json" target="_blank" rel="noopener">JSON sidecar</a></div></div>' : '')+'<div class="notice"><strong>Prototype data view.</strong> Sample data are illustrative. These tables are not yet a substitute for approved engineering calculations.</div><div class="card"><h2 class="section-title">'+escapeHtml(sheet || page)+' · '+rows.length+' records</h2>'+table+'</div>';
+    document.getElementById('pageContent').innerHTML='<div class="page-head"><div><h1>'+escapeHtml(page)+'</h1><p>'+escapeHtml(descriptions[page] || 'Review and validate the records loaded into this workspace.')+'</p></div><div class="actions"><button class="btn" id="moduleDownload">Download Excel</button>'+(page==='Feeder & Cable Generation' ? '<button class="btn primary" id="generateDraftCables">Generate Draft Cables</button><button class="btn" id="generateInstrumentCables">Generate PLC/RIO–JB & Instrument Cables</button>' : '')+(page==='Tray Allocation' ? '<button class="btn primary" id="runTrayAllocation">Propose Tray Allocation</button><button class="btn" id="downloadAllocationReport">Download Allocation CSV</button>' : '')+(page==='Drawing & Layout Inputs' || page==='Substation Layout' ? '<button class="btn" id="layoutInputHelp">Supported Inputs</button><button class="btn primary" id="loadPublishedLayout">Refresh latest layout</button><a class="btn" href="https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.dxf" target="_blank" rel="noopener">Open latest DXF</a><a class="btn" href="https://raw.githubusercontent.com/puneetnarayan/acad_substation/main/generated/substation_layout.json" target="_blank" rel="noopener">Open layout JSON</a><button class="btn" id="addDrawingReference">Add Drawing / Layout</button>' : '')+'<button class="btn" id="backDashboard">Dashboard</button></div></div>'+(page==='Drawing & Layout Inputs'||page==='Substation Layout' ? '<div class="card" id="drawingAvailabilityCard" style="margin-bottom:10px;background:#f8fbfd"><div class="section-title">GitHub drawing availability</div><div id="drawingAvailabilityStatus" class="muted">Checking acad_substation repository…</div><div id="publishedLayoutPreview" style="margin-top:7px;min-height:28px"></div><div class="actions" style="margin-top:6px"><a class="btn primary" href="https://github.com/puneetnarayan/acad_substation/tree/main/generated" target="_blank" rel="noopener">View generated files</a><a class="btn" href="https://github.com/puneetnarayan/acad_substation/blob/main/generated/substation_layout.dxf" target="_blank" rel="noopener">DXF file on GitHub</a><a class="btn" href="https://github.com/puneetnarayan/acad_substation/blob/main/generated/substation_layout.json" target="_blank" rel="noopener">JSON sidecar</a></div></div>' : '')+'<div class="notice"><strong>Prototype data view.</strong> Sample data are illustrative. These tables are not yet a substitute for approved engineering calculations.</div><div class="card"><h2 class="section-title">'+escapeHtml(sheet || page)+' · '+rows.length+' records</h2>'+table+'</div>';
     document.getElementById('backDashboard').addEventListener('click',()=>{location.hash='#dashboard';});
     document.getElementById('moduleDownload').addEventListener('click',downloadWorkbook);
     if(page==='Drawing & Layout Inputs'||page==='Substation Layout') refreshDrawingAvailability();
@@ -277,6 +277,63 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
       loadSampleData();
       renderModule('Feeder & Cable Generation');
       alert('Created '+created+' provisional draft cable record(s). Missing cable specs, route, tray and length fields are left blank and highlighted light red. Review every generated row; this is not an approved cable schedule.');
+    });
+    const instrumentBtn=document.getElementById('generateInstrumentCables');
+    if(instrumentBtn) instrumentBtn.addEventListener('click',()=>{
+      const instruments=[...(sampleData.Instrument_Register||[]),...(sampleData.Instrument_Master||[]),...(sampleData.Field_Instruments||[])];
+      const junctionBoxes=sampleData.JB_Register||sampleData.Junction_Box_Register||[];
+      const cables=Array.isArray(sampleData.Cable_Schedule)?sampleData.Cable_Schedule:[];
+      const norm=v=>String(v??'').trim();
+      const pick=(row,keys)=>{for(const k of keys){if(norm(row?.[k]))return norm(row[k]);}return '';};
+      const existing=new Set(cables.map(c=>norm(c.Cable_ID)));
+      const add=(id,from,to,category,cores,signal,kind)=>{
+        if(!from||!to||!id||existing.has(id))return false;
+        const missing=['Cable specification / cable OD','Route_ID','Tray_ID','Length_m'];
+        if(!cores)missing.push('Cores');
+        cables.push({Cable_ID:id,From:from,To:to,Category:category,Signal_Type:signal,Cores:cores||'',Route_ID:'',Tray_ID:'',Length_m:'',Record_Status:'PROVISIONAL DRAFT',Cable_Generation_Type:kind,Missing_Inputs:missing.join('; ')});
+        existing.add(id);return true;
+      };
+      // Group field instruments by JB and PLC/RIO so each group gets one multicore trunk.
+      const groups=new Map();let createdTrunks=0,createdDrops=0;
+      instruments.forEach((r,i)=>{
+        const inst=pick(r,['Instrument_Tag','Instrument_ID','Tag','Equipment_Tag','Field_Device_Tag','Device_Tag','Tag_No']);
+        const jb=pick(r,['JB_Tag','JB_ID','Junction_Box','Junction_Box_Tag','JB','To_JB']);
+        const io=pick(r,['PLC_RIO_Tag','RIO_Tag','PLC_Tag','PLC_Rack_Tag','PLC_RIO','Source_IO','From_PLC_RIO','IO_Panel_Tag']);
+        if(!inst||!jb){return;}
+        const groupKey=io+'||'+jb;
+        if(!groups.has(groupKey))groups.set(groupKey,{io,jb,rows:[]});
+        groups.get(groupKey).rows.push({...r,__instrument:inst,__jb:jb,__io:io,__index:i});
+      });
+      groups.forEach((g,gi)=>{
+        if(g.io){
+          const supplied=pick(g.rows[0],['Trunk_Cable_ID','Multicore_Cable_ID','PLC_JB_Cable_ID']);
+          const id=supplied||('DRAFT-PLCJB-'+(g.io+'-'+g.jb).replace(/[^A-Za-z0-9_-]/g,'-'));
+          const coreSum=g.rows.reduce((n,r)=>n+Math.max(1,Number(pick(r,['Cores_Required','Signal_Cores','Cores']))||1),0);
+          const declared=pick(g.rows[0],['Trunk_Cores','Multicore_Cores','PLC_JB_Cores']);
+          const cores=declared||String(coreSum);
+          if(add(id,g.io,g.jb,'Instrumentation multicore',cores,'Grouped instrument signals','PLC/RIO to JB multicore'))createdTrunks++;
+        }
+        g.rows.forEach(r=>{
+          const category=pick(r,['Cable_Category','Cable_Type'])||'Instrumentation individual';
+          const cores=pick(r,['Instrument_Cable_Cores','Cable_Cores','Cores_Required'])||'2';
+          const id=pick(r,['Instrument_Cable_ID','Cable_ID'])||('DRAFT-JB-INST-'+r.__instrument.replace(/[^A-Za-z0-9_-]/g,'-'));
+          if(add(id,r.__jb,r.__instrument,category,cores,pick(r,['Signal_Type','Instrument_Type','Service']), 'JB to instrument individual'))createdDrops++;
+        });
+      });
+      // Optional explicit JB register can define PLC/RIO-to-JB trunks even before instrument rows exist.
+      junctionBoxes.forEach((r,i)=>{
+        const jb=pick(r,['JB_Tag','JB_ID','Junction_Box_Tag','Tag','Junction_Box']);
+        const io=pick(r,['PLC_RIO_Tag','RIO_Tag','PLC_Tag','PLC_RIO','Source_IO','From_PLC_RIO']);
+        if(!jb||!io)return;
+        const id=pick(r,['Trunk_Cable_ID','Multicore_Cable_ID','Cable_ID'])||('DRAFT-PLCJB-'+(io+'-'+jb).replace(/[^A-Za-z0-9_-]/g,'-'));
+        const cores=pick(r,['Trunk_Cores','Multicore_Cores','Cores'])||'';
+        if(add(id,io,jb,'Instrumentation multicore',cores,'PLC/RIO I/O trunk','PLC/RIO to JB multicore'))createdTrunks++;
+      });
+      sampleData.Cable_Schedule=cables;
+      loadSampleData();
+      renderModule('Cable Schedule');
+      saveActiveEcrWorkspace();
+      alert('Generated '+createdTrunks+' provisional PLC/RIO-to-JB multicore cable(s) and '+createdDrops+' JB-to-instrument individual cable(s). '+(instruments.length?'':'No instrument register rows were found. Import an Instrument_Register sheet with instrument tag, JB tag and PLC/RIO tag fields. ')+'Cable sizes, route, tray and length remain blank for engineering review; no existing cable IDs were overwritten.');
     });
     const allocationBtn=document.getElementById('runTrayAllocation');
     if(allocationBtn) allocationBtn.addEventListener('click',()=>{const results=proposeTrayAllocations();renderAllocationResults(results);});
