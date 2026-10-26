@@ -404,7 +404,7 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
         }
         for(let c=range.s.c;c<=range.e.c;c++){
           const cell=sheet[XLSX.utils.encode_cell({r:range.s.r,c})];
-          if(cell)cell.s={fill:{patternType:'solid',fgColor:{rgb:'17365D'}},font:{bold:true,color:{rgb:'FFFFFF'}}};
+          if(cell)cell.s={fill:{patternType:'solid',fgColor:{rgb:'F4B183'}},font:{bold:true,color:{rgb:'000000'}}};
         }
         sheet['!cols']=Array.from({length:range.e.c+1},(_,i)=>({wch:Math.min(42,Math.max(12,...data.slice(0,80).map(row=>String(Object.values(row)[i]??'').length+2)))}));
         sheet['!autofilter']={ref:XLSX.utils.encode_range(range)};
@@ -440,7 +440,7 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
     summary['!cols']=[{wch:48},{wch:105}];
     summary['!autofilter']={ref:'A1:B'+summaryRows.length};
     summary['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activePane:'bottomLeft',state:'frozen'};
-    summaryRows.forEach((row,r)=>row.forEach((v,c)=>{const cell=summary[XLSX.utils.encode_cell({r,c})];if(!cell)return;cell.s={border:{top:{style:'thin',color:{rgb:'FFB7C9D6'}},bottom:{style:'thin',color:{rgb:'FFB7C9D6'}},left:{style:'thin',color:{rgb:'FFB7C9D6'}},right:{style:'thin',color:{rgb:'FFB7C9D6'}}},alignment:{vertical:'top',wrapText:true}};if(r===0)cell.s={...cell.s,fill:{patternType:'solid',fgColor:{rgb:'17365D'}},font:{bold:true,color:{rgb:'FFFFFF'}}};else if(r===1)cell.s={...cell.s,fill:{patternType:'solid',fgColor:{rgb:'FCE4D6'}},font:{bold:true,color:{rgb:'9C0006'}}};}));
+    summaryRows.forEach((row,r)=>row.forEach((v,c)=>{const cell=summary[XLSX.utils.encode_cell({r,c})];if(!cell)return;cell.s={border:{top:{style:'thin',color:{rgb:'FF000000'}},bottom:{style:'thin',color:{rgb:'FF000000'}},left:{style:'thin',color:{rgb:'FF000000'}},right:{style:'thin',color:{rgb:'FF000000'}}},alignment:{vertical:'top',wrapText:true}};if(r===0)cell.s={...cell.s,fill:{patternType:'solid',fgColor:{rgb:'F4B183'}},font:{bold:true,color:{rgb:'000000'}}};else if(r===1)cell.s={...cell.s,fill:{patternType:'solid',fgColor:{rgb:'FCE4D6'}},font:{bold:true,color:{rgb:'9C0006'}}};}));
     XLSX.utils.book_append_sheet(wb,summary,'Sample Summary');
     const readme=XLSX.utils.aoa_to_sheet([
       ['ReadMe','Instructions'],
