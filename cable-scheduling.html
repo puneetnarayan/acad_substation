@@ -709,6 +709,8 @@ window.addEventListener('message',event=>{
   loadSampleData();
   return;
  }
+ // A first-time ECR starts with no inherited sample cables/routes/tray assignments.
+ if(!hasSavedWorkspace)clearAllData();
  loadPublishedSubstationLayout(false,payload).then(()=>{
   loadSampleData();
   saveActiveEcrWorkspace();
