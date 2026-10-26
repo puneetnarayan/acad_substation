@@ -97,19 +97,22 @@ const SUBSTATION_LAYOUT_DXF_URL='https://raw.githubusercontent.com/puneetnarayan
 let latestSubstationLayout=null,latestSubstationLayoutStatus='Loading published sample layout…';
 async function refreshDrawingAvailability(){
   const box=document.getElementById('drawingAvailabilityStatus'); if(!box)return;
-  box.textContent='Checking GitHub for the published DXF and layout JSON…';
+  box.textContent='Checking published DXF and layout JSON…';
   const checks=await Promise.all([
     fetch(SUBSTATION_LAYOUT_DXF_URL+'?check='+Date.now(),{method:'HEAD',cache:'no-store'}).then(r=>({ok:r.ok,status:r.status})).catch(()=>({ok:false,status:'network/CORS'})),
     fetch(SUBSTATION_LAYOUT_JSON_URL+'?check='+Date.now(),{cache:'no-store'}).then(async r=>({ok:r.ok,status:r.status,payload:r.ok?await r.json():null})).catch(()=>({ok:false,status:'network/CORS',payload:null}))
   ]);
   const dxf=checks[0],json=checks[1];
   if(!box.isConnected)return;
-  if(dxf.ok && json.ok){
-    const sample=!!json.payload?.sample_data;
+  // Always show the embedded ACAD layout workspace. A missing/unpublished DXF
+  // must not hide the drawing view when the JSON sidecar is available.
+  if(json.ok && json.payload){
+    const sample=!!json.payload.sample_data;
     renderPublishedLayoutPreview(json.payload);
-    box.innerHTML='<span class="pill good">DXF available</span> <span class="pill '+(sample?'pending':'good')+'">'+(sample?'Illustrative sample drawing':'Published project drawing')+'</span><br><span class="muted">Repository: puneetnarayan/acad_substation · generated/substation_layout.dxf. '+(sample?'The committed drawing currently uses sample layout inputs; replace them with approved project data.':'Latest published layout JSON is available. Verify the drawing before routing.')+'</span>';
+    box.innerHTML='<span class="pill '+(dxf.ok?'good':'pending')+'">'+(dxf.ok?'DXF file available':'DXF file not confirmed')+'</span> <span class="pill '+(sample?'pending':'good')+'">'+(sample?'Illustrative sample layout':'Published project layout')+'</span><br><span class="muted">Layout JSON loaded from generated/substation_layout.json. '+(dxf.ok?'Download the DXF for CAD review. ':'The embedded layout workspace is still shown below; use its preview/export controls while the DXF file is published or connectivity is restored. ')+(sample?'This is sample data, not an approved project drawing.':'Verify the layout before cable routing.')+'</span>';
   } else {
-    box.innerHTML='<span class="pill pending">Availability not confirmed from this browser</span><br><span class="muted">Open the repository folder to inspect current files. HTTP/network restrictions can prevent the live check.</span>';
+    renderPublishedLayoutPreview(latestSubstationLayout||{sample_data:true,updated_at:'Live JSON unavailable',settings:{},panels:[]});
+    box.innerHTML='<span class="pill pending">Live drawing files could not be confirmed</span><br><span class="muted">The embedded ACAD Substation workspace is shown below as a fallback. Refresh after publishing the layout JSON/DXF or check network access.</span>';
   }
 }
 function renderPublishedLayoutPreview(payload){
