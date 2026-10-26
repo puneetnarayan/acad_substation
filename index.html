@@ -344,8 +344,9 @@ function wallExitGeometry(){
  return {s,scale,ox,oy,rw,rh,sx:x=>ox+x*scale,sy:y=>oy+(s.roomY-y)*scale};
 }
 function wallExitPoint(e){
- const svg=$("preview"),r=svg.getBoundingClientRect(),vb=(svg.getAttribute("viewBox")||"0 0 1000 650").split(/\s+/).map(Number);
- const ux=vb[0]+(e.clientX-r.left)/Math.max(1,r.width)*vb[2],uy=vb[1]+(e.clientY-r.top)/Math.max(1,r.height)*vb[3],g=wallExitGeometry();
+ const svg=$("preview"),g=wallExitGeometry();let ux,uy;
+ try{const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(svg.getScreenCTM().inverse());ux=q.x;uy=q.y}
+ catch(err){const r=svg.getBoundingClientRect(),vb=(svg.getAttribute("viewBox")||"0 0 1000 650").split(/\s+/).map(Number);ux=vb[0]+(e.clientX-r.left)/Math.max(1,r.width)*vb[2];uy=vb[1]+(e.clientY-r.top)/Math.max(1,r.height)*vb[3]}
  return {ux,uy,x:(ux-g.ox)/g.scale,y:g.s.roomY-(uy-g.oy)/g.scale};
 }
 function wallExitFmt(n){return Number.isFinite(n)?Math.round(n).toLocaleString("en-US")+" mm":"—"}
