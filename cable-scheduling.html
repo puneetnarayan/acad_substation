@@ -667,22 +667,51 @@ document.getElementById('clearDataBtn').addEventListener('click',()=>{
 // Populate sample data automatically whenever the app is opened.
 loadSampleData();
 // Receive live active-ECR data from the ACAD Substation master.
+// Each ECR has an independent browser-local cable engineering workspace.
+const ECR_WORKSPACE_STORAGE_PREFIX='acadCableWorkspace:v1:';
+let activeEcrStorageKey=null;
+function ecrWorkspaceKey(payload){
+ const plant=String(payload?.settings?.plantName||payload?.settings?.projectName||'Default Plant').trim().toLowerCase();
+ const ecr=String(payload?.ecr?.name||('ECR'+(Number(payload?.ecr?.index||0)+1))).trim().toLowerCase();
+ return ECR_WORKSPACE_STORAGE_PREFIX+encodeURIComponent(plant)+'::'+encodeURIComponent(ecr);
+}
+function saveActiveEcrWorkspace(){
+ if(!activeEcrStorageKey)return;
+ try{localStorage.setItem(activeEcrStorageKey,JSON.stringify({version:1,savedAt:new Date().toISOString(),sampleData:JSON.parse(JSON.stringify(sampleData))}));}
+ catch(err){console.warn('Could not save this ECR workspace locally',err);}
+}
+function restoreEcrWorkspace(payload){
+ const key=ecrWorkspaceKey(payload);activeEcrStorageKey=key;
+ try{
+  const raw=localStorage.getItem(key);if(!raw)return false;
+  const saved=JSON.parse(raw);if(saved?.version!==1||!saved.sampleData||typeof saved.sampleData!=='object')return false;
+  Object.keys(sampleData).forEach(k=>delete sampleData[k]);
+  Object.entries(saved.sampleData).forEach(([k,v])=>sampleData[k]=Array.isArray(v)?v:[]);
+  return true;
+ }catch(err){console.warn('Could not restore this ECR workspace',err);return false;}
+}
 window.addEventListener('message',event=>{
  if(event.origin!==location.origin||event.data?.type!=='ACAD_SUBSTATION_ECR_SYNC'||!event.data.payload)return;
  const payload=event.data.payload;
+ // Commit the outgoing ECR before switching, then load only the destination ECR's saved data.
+ saveActiveEcrWorkspace();
+ const hasSavedWorkspace=restoreEcrWorkspace(payload);
  const isBlankSecondaryEcr=Number(payload.ecr?.index)>0&&Array.isArray(payload.panels)&&payload.panels.length===0;
  if(isBlankSecondaryEcr){
-  clearAllData();
+  if(!hasSavedWorkspace)clearAllData();
   latestSubstationLayout=payload;
-  latestSubstationLayoutStatus='Blank ECR · waiting for engineering inputs';
+  latestSubstationLayoutStatus=hasSavedWorkspace?'Saved blank-ECR workspace restored':'Blank ECR · waiting for engineering inputs';
   renderPublishedLayoutPreview(payload);
   const ecr=payload.ecr||{},title=document.getElementById('topTitle');
   if(title)title.textContent='Cable Scheduling & Tray Allocation · '+(ecr.name||'Active ECR');
   const notice=document.querySelector('#pageContent .notice');
-  if(notice)notice.innerHTML='<strong>Blank ECR workspace.</strong> '+escapeHtml(ecr.name||'Secondary ECR')+' has no panels or cable records yet. No sample cable schedule, routes, trays or equipment data are carried over from ECR1. Add/import approved engineering inputs for this ECR.';
+  if(notice)notice.innerHTML='<strong>'+(hasSavedWorkspace?'Saved ECR workspace restored.':'Blank ECR workspace.')+'</strong> '+escapeHtml(ecr.name||'Secondary ECR')+'. '+(hasSavedWorkspace?'This ECR’s locally saved cable, route and tray data have been restored; its ACAD layout remains blank until inputs are provided.':'No sample cable schedule, routes, trays or equipment data are carried over from ECR1. Add/import approved engineering inputs for this ECR.')+' Workspace data are saved in this browser only.';
+  loadSampleData();
   return;
  }
  loadPublishedSubstationLayout(false,payload).then(()=>{
+  loadSampleData();
+  saveActiveEcrWorkspace();
   const ecr=payload.ecr||{},title=document.getElementById('topTitle');
   latestSubstationLayoutStatus='Live ACAD layout synced · '+(ecr.name||'active ECR');
   if(title)title.textContent='Cable Scheduling & Tray Allocation · '+(ecr.name||'Active ECR');
@@ -690,6 +719,10 @@ window.addEventListener('message',event=>{
   if(notice)notice.innerHTML='<strong>Live ACAD master data.</strong> '+escapeHtml(ecr.name||'Active ECR')+' · '+(payload.panels||[]).length+' panel(s) · room '+escapeHtml(payload.settings?.roomX??'')+' × '+escapeHtml(payload.settings?.roomY??'')+' mm. Switch ECR in ACAD Substation to refresh. Cable routes, cable sizes and tray capacities remain separate engineering inputs and are not inferred.';
  }).catch(err=>console.warn('Could not apply live ACAD ECR data',err));
 });
+// Persist edits in the active ECR workspace as the user works.
+document.addEventListener('change',()=>saveActiveEcrWorkspace());
+document.addEventListener('input',()=>{if(activeEcrStorageKey){clearTimeout(window.__ecrWorkspaceSaveTimer);window.__ecrWorkspaceSaveTimer=setTimeout(saveActiveEcrWorkspace,500);}});
+window.addEventListener('beforeunload',saveActiveEcrWorkspace);
 if(window.parent!==window)window.parent.postMessage({type:'ACAD_CABLE_SYNC_REQUEST'},location.origin);
 // Fallback for standalone use; the parent sends the selected ECR after iframe load.
 loadPublishedSubstationLayout(false).catch(err=>{latestSubstationLayoutStatus='Published layout unavailable; waiting for live ACAD master data';console.warn(err);});
