@@ -918,7 +918,9 @@ function restoreEcrWorkspace(payload){
  }catch(err){console.warn('Could not restore this ECR workspace',err);return false;}
 }
 window.addEventListener('message',event=>{
- if(event.origin!==location.origin||event.data?.type!=='ACAD_SUBSTATION_ECR_SYNC'||!event.data.payload)return;
+ if(event.origin!==location.origin)return;
+ if(event.data?.type==='ACAD_DOWNLOAD_CABLE_EXCEL'){downloadWorkbook();return}
+ if(event.data?.type!=='ACAD_SUBSTATION_ECR_SYNC'||!event.data.payload)return;
  const payload=event.data.payload;
  // Commit the outgoing ECR before switching, then load only the destination ECR's saved data.
  saveActiveEcrWorkspace();
