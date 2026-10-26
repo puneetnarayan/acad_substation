@@ -13,13 +13,16 @@ function json(data, status=200) {
   return new Response(JSON.stringify(data), {status, headers:{...cors,"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 }
 function safePlant(value) {
-  const name=String(value||"").trim().replace(/[\\/\\\\?#%]+/g,"-").replace(/\\s+/g," ").slice(0,100);
+  let name=String(value||"").trim();
+  for(const ch of ["/","\\","?","#","%"]) name=name.split(ch).join("-");
+  name=name.slice(0,100);
   if(!name || name==="." || name==="..") return "";
   return name;
 }
 function authorized(request, env) {
   const expected=String(env.STORAGE_TOKEN||"");
-  const provided=(request.headers.get("Authorization")||"").replace(/^Bearer\\s+/i,"").trim();
+  const auth=(request.headers.get("Authorization")||"").trim();
+  const provided=(auth.slice(0,7).toLowerCase()==="bearer "?auth.slice(7):auth).trim();
   if(!expected || !provided || expected.length!==provided.length) return false;
   let diff=0; for(let i=0;i<expected.length;i++) diff |= expected.charCodeAt(i)^provided.charCodeAt(i);
   return diff===0;
