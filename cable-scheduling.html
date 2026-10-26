@@ -426,6 +426,12 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
       ['Generated Sample Instrument Drops (JB to Instrument)',drops],
       ['Instrument Register Records',(sampleData.Instrument_Register||[]).length],
       ['Junction Box Register Records',(sampleData.JB_Register||[]).length],
+      ['Equipment Master Records',(sampleData.Equipment_Master||[]).filter(x=>/^ECR[12]-/.test(String(x.Equipment_ID||''))).length],
+      ['PLC Panels',(sampleData.Equipment_Master||[]).filter(x=>/^ECR[12]-PLC-/.test(String(x.Equipment_ID||''))).length],
+      ['RIO Panels',(sampleData.Equipment_Master||[]).filter(x=>/^ECR[12]-RIO-/.test(String(x.Equipment_ID||''))).length],
+      ['Battery Chargers',(sampleData.Equipment_Master||[]).filter(x=>String(x.Type||'').toLowerCase().includes('battery charger')).length],
+      ['UPS Units',(sampleData.Equipment_Master||[]).filter(x=>String(x.Type||'').toLowerCase()==='ups').length],
+      ['Network Racks',(sampleData.Equipment_Master||[]).filter(x=>String(x.Type||'').toLowerCase().includes('network rack')).length],
       ['ECR Rule','Keep each ECR separate; an ECR with no layout inputs must remain blank for ECR-specific layout data'],
       ['Engineering Caveat','Cable lengths are illustrative. Route IDs, tray IDs, cable size/specification and measured lengths require confirmation.'],
       ['Next Step','Publish the approved ACAD layout, refresh Cable Scheduling, then validate endpoints, cable specifications, routes and tray allocations.']
@@ -441,7 +447,9 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
       ['Purpose','Illustrates the Cable Scheduling app data structure and provisional cable generation.'],
       ['Source of truth','ACAD Substation is the master for ECR layout data.'],
       ['Drawing visibility','The embedded ACAD workspace can display the layout; downloading/viewing a DWG/DXF requires the generated file to be published.'],
+      ['Sample registers','Includes 75 junction boxes, 150 instruments, PLC/RIO panels, battery charger, UPS units and network racks in Equipment_Master and Panel_Layout.'],
       ['Sample records','Rows marked ILLUSTRATIVE SAMPLE or PROVISIONAL SAMPLE are not approved engineering data.'],
+      ['Equipment layout','Equipment dimensions are illustrative; X/Y positions remain blank until approved layout inputs are provided.'],
       ['Lengths','Sample lengths are placeholders, not routed or measured lengths.'],
       ['Route and tray','Blank Route_ID and Tray_ID mean no approved route/tray assignment has been made.'],
       ['Use','Replace illustrative data with approved project data and run validation before engineering issue.']
@@ -613,13 +621,16 @@ function buildExpandedSampleData(){
  const addEquip=(ecr,tag,type,w,h,voltage,area)=>sampleData.Equipment_Master.push({
   Equipment_ID:ecr+'-'+tag,Tag:tag,Type:type,Area:area,Row:ecr+' sample layout',
   ECR:ecr,Width_mm:w,Depth_mm:h,Voltage_Class:voltage,Data_Status:'ILLUSTRATIVE SAMPLE — VERIFY'});
- // ECR1 electrical room equipment
+ // ECR-specific illustrative electrical, control and communication equipment.
+ // PLC panels are listed separately from the five RIO groups used by the sample JB register.
  addEquip('ECR1','BAT-CHG-01','Battery Charger',2500,1250,'DC','ECR 1');
+ addEquip('ECR1','PLC-01','PLC Panel',2000,1000,'LV / Control','ECR 1');
  addEquip('ECR1','UPS-01','UPS',2500,1250,'LV','ECR 1');
  for(let i=1;i<=3;i++)addEquip('ECR1','RIO-'+String(i).padStart(2,'0'),'RIO Panel',2000,1000,'LV / I-O','ECR 1');
  for(let i=1;i<=4;i++)addEquip('ECR1','NET-RACK-'+String(i).padStart(2,'0'),'Network Rack',800,800,'ELV / Network','ECR 1');
+ addEquip('ECR2','PLC-02','PLC Panel',2000,1000,'LV / Control','ECR 2');
  addEquip('ECR2','UPS-02','UPS',2500,1250,'LV','ECR 2');
- for(let i=1;i<=2;i++)addEquip('ECR2','RIO-'+String(i).padStart(2,'0'),'RIO Panel',2000,1000,'LV / I-O','ECR 2');
+ for(let i=1;i<=2;i++)addEquip('ECR2','RIO-'+String(i+3).padStart(2,'0'),'RIO Panel',2000,1000,'LV / I-O','ECR 2');
  for(let i=1;i<=2;i++)addEquip('ECR2','NET-RACK-'+String(i).padStart(2,'0'),'Network Rack',800,800,'ELV / Network','ECR 2');
  // Add ECR-specific layout records for consumers that read Panel_Layout.
  sampleData.Panel_Layout=(sampleData.Panel_Layout||[]).filter(x=>!/^ECR[12]-/.test(String(x.Panel_ID||'')));
