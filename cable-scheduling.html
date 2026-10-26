@@ -361,12 +361,50 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
     if(!window.XLSX){alert('Excel workbook library did not load. Check your internet connection and reload.');return;}
     const wb=XLSX.utils.book_new();
     const templateHeaders={
-      Instrument_Register:['Instrument_Tag','Instrument_Type','Service','Signal_Type','PLC_RIO_Tag','JB_Tag','Cores_Required','Instrument_Cable_ID','Instrument_Cable_Cores','Cable_Category'],
-      JB_Register:['JB_Tag','PLC_RIO_Tag','Trunk_Cable_ID','Trunk_Cores','Location','Area','Remarks']
+      Instrument_Register:['Instrument_Tag','Instrument_Type','Service','Signal_Type','PLC_RIO_Tag','JB_Tag','Cores_Required','Instrument_Cable_ID','Instrument_Cable_Cores','Cable_Category','Field_Area','Field_Cable_Length_m','Data_Status'],
+      JB_Register:['JB_Tag','PLC_RIO_Tag','Trunk_Cable_ID','Trunk_Cores','Location','Area','Substation_to_JB_Length_m','Remarks','Cable_Category','Data_Status']
+    };
+    const fills={
+      '33 kV Power':'DDEBF7','6.6 kV Power':'E4DFEC','LT Power':'FFF2CC','LV VFD':'FCE4D6','MV VFD':'F4CCCC',
+      'RIO':'D9EAD3','PLC':'D9EAD3','CONTROL / INSTRUMENTATION':'D9EAF7','INSTRUMENTATION':'E2F0D9',
+      'JB–INSTRUMENT DROP':'E2F0D9','PLC/RIO–JB MULTICORE':'D9EAF7','Network Rack':'EADCF8',
+      'UPS':'FCE4D6','Battery Charger':'FCE4D6','DC Power':'FCE4D6','Communication':'EADCF8','Protection':'DDEBF7'
+    };
+    const pastelFor=(row,sheetName)=>{
+      const text=[row.Category,row.Cable_Category,row.Type,row.Equipment_Type,row.Instrument_Type,row.Signal_Type,row.Voltage_Class,row.Voltage_kV].filter(v=>v!==undefined&&v!==null).join(' ').toLowerCase();
+      if(text.includes('33 kv')||text.includes('33kv')||text.includes('33 kV'.toLowerCase()))return fills['33 kV Power'];
+      if(text.includes('6.6'))return fills['6.6 kV Power'];
+      if(text.includes('mvvfd')||text.includes('mv vfd'))return fills['MV VFD'];
+      if(text.includes('lvvfd')||text.includes('lv vfd'))return fills['LV VFD'];
+      if(text.includes('rio'))return fills['RIO'];
+      if(text.includes('plc/rio')||text.includes('multicore'))return fills['PLC/RIO–JB MULTICORE'];
+      if(text.includes('jb')||text.includes('instrument')||text.includes('4-20 ma')||text.includes('limit switch')||text.includes('flowmeter')||text.includes('density'))return fills['INSTRUMENTATION'];
+      if(text.includes('network rack'))return fills['Network Rack'];
+      if(text.includes('ups')||text.includes('battery charger'))return fills['UPS'];
+      if(text.includes('0.415')||text.includes('lt power')||text.includes('415'))return fills['LT Power'];
+      if(text.includes('dc power'))return fills['DC Power'];
+      if(text.includes('communication')||text.includes('network'))return fills['Communication'];
+      return null;
     };
     Object.entries(sampleData).forEach(([name,rows])=>{
       const data=Array.isArray(rows)?rows:[];
       const sheet=data.length?XLSX.utils.json_to_sheet(data):templateHeaders[name]?XLSX.utils.aoa_to_sheet([templateHeaders[name]]):XLSX.utils.json_to_sheet(data);
+      if(sheet['!ref']){
+        const range=XLSX.utils.decode_range(sheet['!ref']);
+        for(let r=range.s.r+1;r<=range.e.r;r++){
+          const row=data[r-1]||{};
+          const color=pastelFor(row,name);
+          if(color)for(let c=range.s.c;c<=range.e.c;c++){
+            const cell=sheet[XLSX.utils.encode_cell({r,c})];
+            if(cell)cell.s={...(cell.s||{}),fill:{patternType:'solid',fgColor:{rgb:color}},font:{...(cell.s?.font||{}),color:{rgb:'344657'}}};
+          }
+        }
+        for(let c=range.s.c;c<=range.e.c;c++){
+          const cell=sheet[XLSX.utils.encode_cell({r:range.s.r,c})];
+          if(cell)cell.s={fill:{patternType:'solid',fgColor:{rgb:'425C76'}},font:{bold:true,color:{rgb:'FFFFFF'}}};
+        }
+        sheet['!cols']=Array.from({length:range.e.c+1},(_,i)=>({wch:Math.min(34,Math.max(12,...data.slice(0,80).map(row=>String(Object.values(row)[i]??'').length+2)))}));
+      }
       XLSX.utils.book_append_sheet(wb,sheet,name.slice(0,31));
     });
     XLSX.writeFile(wb,'Cable_Scheduling_Sample_Data.xlsx');
@@ -453,7 +491,7 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
 })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
 <script>
 function escapeHtml(value) { return String(value).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
 const sampleData = {
@@ -496,6 +534,74 @@ const sampleData = {
  Project_Settings: [{Setting:"Project_Name",Value:"Illustrative Steel Plant Substation"},{Setting:"Max_Tray_Tiers",Value:10},{Setting:"Spare_Capacity_Percent",Value:20},{Setting:"Data_Status",Value:"Illustrative only; verify before engineering use"}],
  Electrical_System_Config:[{Parameter:"33kV_Arrangement",Value:"Single and multiple switchboards supported"},{Parameter:"6.6kV_Arrangement",Value:"Two transformers / separate bus sections; variable arrangements also supported"},{Parameter:"Include_PCC",Value:"Yes"},{Parameter:"PMCC_to_multiple_IMCCs",Value:"Yes"},{Parameter:"IMCC_Operating_Rule",Value:"Configurable: exactly one incomer ON, other incomer OFF, bus coupler OFF where selected"},{Parameter:"Motor_Data",Value:"Tag, description, kW, voltage, current, starting method, source/destination, drive, duty/standby, redundancy"},{Parameter:"VFD_Cables",Value:"Separate input and output cable records"},{Parameter:"Spare_Feeders",Value:"Record spare feeders; generate cables only when required"},{Parameter:"Layout_Inputs",Value:"DWG/DXF reference, PDF, image/scan, Excel, coordinates, or mixture"},{Parameter:"Panel_Layout",Value:"Straight rows"},{Parameter:"Cable_Generation",Value:"Automatic provisional schedule from feeder register"},{Parameter:"Missing_Field_Display",Value:"Light red"}],Feeder_Register:[],Motor_Register:[],VFD_Register:[],Switchboard_Panels:[],Transformer_Register:[],PMCC_IMCC_Register:[],Panel_Layout:[],Power_Cable_Generation_Rules:[],Panel_Layout_Guide:[],Instrument_Register:[],JB_Register:[]
 };
+
+/* Expanded, reproducible sample workbook data. These are illustrative field allocations,
+   not surveyed locations or approved cable lengths. */
+function buildExpandedSampleData(){
+ const categories=[
+  ['Density Meter',7,'Density measurement','4-20 mA'],['Flowmeter',20,'Flow measurement','4-20 mA'],
+  ['Pressure Transmitter',12,'Pressure measurement','4-20 mA'],['Temperature Meter',10,'Temperature measurement','4-20 mA'],
+  ['Inductive Limit Switch',30,'Position / limit indication','DI'],['Level Transmitter',3,'Level measurement','4-20 mA'],
+  ['Site Analog Display',68,'Local/site analog indication','4-20 mA']
+ ];
+ const instruments=[];
+ let n=1;
+ categories.forEach(([type,count,service,signal])=>{
+  for(let j=0;j<count;j++){
+   const id='INS-'+String(n).padStart(3,'0');
+   const jbNum=((n-1)%75)+1;
+   instruments.push({Instrument_Tag:id,Instrument_Type:type,Service:service,Signal_Type:signal,
+    PLC_RIO_Tag:'RIO-'+String(Math.floor((jbNum-1)/15)+1).padStart(2,'0'),
+    JB_Tag:'JB-'+String(jbNum).padStart(3,'0'),Cores_Required:signal==='DI'?2:2,
+    Instrument_Cable_ID:'IC-'+String(n).padStart(3,'0'),Instrument_Cable_Cores:signal==='DI'?2:1,
+    Cable_Category:'INSTRUMENTATION',Field_Area:'Field Area '+String(Math.floor((jbNum-1)/15)+1).padStart(2,'0'),
+    Field_Cable_Length_m:25+((n*37+jbNum*11)%101),Data_Status:'ILLUSTRATIVE SAMPLE — VERIFY'});
+   n++;
+  }
+ });
+ const jbs=Array.from({length:75},(_,i)=>({JB_Tag:'JB-'+String(i+1).padStart(3,'0'),
+  PLC_RIO_Tag:'RIO-'+String(Math.floor(i/15)+1).padStart(2,'0'),
+  Trunk_Cable_ID:'PLCJB-'+String(i+1).padStart(3,'0'),Trunk_Cores:Math.max(12,instruments.filter(x=>x.JB_Tag==='JB-'+String(i+1).padStart(3,'0')).length*2+4),
+  Location:'Field Area '+String(Math.floor(i/15)+1).padStart(2,'0'),
+  Area:'Field Area '+String(Math.floor(i/15)+1).padStart(2,'0'),Substation_to_JB_Length_m:180,
+  Remarks:'Fixed illustrative trunk length 180 m; confirm route and actual length',
+  Cable_Category:'CONTROL / INSTRUMENTATION',Data_Status:'ILLUSTRATIVE SAMPLE — VERIFY'}));
+ sampleData.Instrument_Register=instruments;
+ sampleData.JB_Register=jbs;
+ sampleData.Equipment_Master=(sampleData.Equipment_Master||[]).filter(x=>!/^ECR[12]-/.test(String(x.Equipment_ID||'')));
+ const addEquip=(ecr,tag,type,w,h,voltage,area)=>sampleData.Equipment_Master.push({
+  Equipment_ID:ecr+'-'+tag,Tag:tag,Type:type,Area:area,Row:ecr+' sample layout',
+  ECR:ecr,Width_mm:w,Depth_mm:h,Voltage_Class:voltage,Data_Status:'ILLUSTRATIVE SAMPLE — VERIFY'});
+ // ECR1 electrical room equipment
+ addEquip('ECR1','BAT-CHG-01','Battery Charger',2500,1250,'DC','ECR 1');
+ addEquip('ECR1','UPS-01','UPS',2500,1250,'LV','ECR 1');
+ for(let i=1;i<=3;i++)addEquip('ECR1','RIO-'+String(i).padStart(2,'0'),'RIO Panel',2000,1000,'LV / I-O','ECR 1');
+ for(let i=1;i<=4;i++)addEquip('ECR1','NET-RACK-'+String(i).padStart(2,'0'),'Network Rack',800,800,'ELV / Network','ECR 1');
+ addEquip('ECR2','UPS-02','UPS',2500,1250,'LV','ECR 2');
+ for(let i=1;i<=2;i++)addEquip('ECR2','RIO-'+String(i).padStart(2,'0'),'RIO Panel',2000,1000,'LV / I-O','ECR 2');
+ for(let i=1;i<=2;i++)addEquip('ECR2','NET-RACK-'+String(i).padStart(2,'0'),'Network Rack',800,800,'ELV / Network','ECR 2');
+ // Add ECR-specific layout records for consumers that read Panel_Layout.
+ sampleData.Panel_Layout=(sampleData.Panel_Layout||[]).filter(x=>!/^ECR[12]-/.test(String(x.Panel_ID||'')));
+ (sampleData.Equipment_Master||[]).filter(x=>/^ECR[12]-/.test(String(x.Equipment_ID||''))).forEach((x,i)=>{
+  sampleData.Panel_Layout.push({Panel_ID:x.Equipment_ID,Tag:x.Tag,Equipment_Type:x.Type,ECR:x.ECR,
+   Width_mm:x.Width_mm,Depth_mm:x.Depth_mm,Voltage_Class:x.Voltage_Class,Area:x.Area,
+   X_mm:'',Y_mm:'',Layout_Status:'DIMENSIONS PROVIDED — POSITION TO BE CONFIRMED',
+   Data_Status:'ILLUSTRATIVE SAMPLE — VERIFY'});
+ });
+ // Instrument drop cables and substation-to-JB trunk cables are shown as provisional records.
+ const cables=(sampleData.Cable_Schedule||[]).filter(x=>!/^SAMP-(JB|INS)-/.test(String(x.Cable_ID||'')));
+ jbs.forEach((jb,i)=>cables.push({Cable_ID:'SAMP-JB-'+String(i+1).padStart(3,'0'),From:'SUBSTATION-PLC/RIO',To:jb.JB_Tag,
+  Category:'PLC/RIO–JB MULTICORE',Cable_Category:'CONTROL / INSTRUMENTATION',Voltage_kV:'',Cores:jb.Trunk_Cores,
+  Size_mm2:'',Route_ID:'',Tray_ID:'',Length_m:180,Record_Status:'PROVISIONAL SAMPLE — VERIFY',
+  Missing_Inputs:'Cable specification; route; tray; measured length',Data_Status:'ILLUSTRATIVE SAMPLE — VERIFY'}));
+ instruments.forEach((ins,i)=>cables.push({Cable_ID:'SAMP-INS-'+String(i+1).padStart(3,'0'),From:ins.JB_Tag,To:ins.Instrument_Tag,
+  Category:'JB–INSTRUMENT DROP',Cable_Category:ins.Cable_Category,Signal_Type:ins.Signal_Type,Voltage_kV:'',
+  Cores:ins.Instrument_Cable_Cores,Size_mm2:'',Route_ID:'',Tray_ID:'',Length_m:ins.Field_Cable_Length_m,
+  Record_Status:'PROVISIONAL SAMPLE — VERIFY',Missing_Inputs:'Cable specification; route; tray; measured length',
+  Data_Status:'ILLUSTRATIVE SAMPLE — VERIFY'}));
+ sampleData.Cable_Schedule=cables;
+}
+buildExpandedSampleData();
 let latestValidationResults=[];
 function runValidation(){
  const results=[];
