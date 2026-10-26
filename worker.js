@@ -38,7 +38,7 @@ export default {
       do {
         const result=await env.PROJECTS.list({delimiter:"/",cursor,limit:1000});
         for(const prefix of result.delimitedPrefixes||[]) {
-          const name=prefix.replace(/\\/$/,"");
+          const name=prefix.endsWith("/")?prefix.slice(0,-1):prefix;
           if(name) projects.push(name);
         }
         cursor=result.truncated?result.cursor:undefined;
