@@ -391,7 +391,7 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
     };
     Object.entries(sampleData).forEach(([name,rows])=>{
       const data=Array.isArray(rows)?rows:[];
-      const sheet=data.length?XLSX.utils.json_to_sheet(data):templateHeaders[name]?XLSX.utils.aoa_to_sheet([templateHeaders[name]]):XLSX.utils.json_to_sheet(data);
+      const sheet=data.length?XLSX.utils.json_to_sheet(data):templateHeaders[name]?XLSX.utils.aoa_to_sheet([templateHeaders[name]]):XLSX.utils.aoa_to_sheet([['No sample records yet']]);
       if(sheet['!ref']){
         const range=XLSX.utils.decode_range(sheet['!ref']);
         for(let r=range.s.r+1;r<=range.e.r;r++){
@@ -404,12 +404,50 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
         }
         for(let c=range.s.c;c<=range.e.c;c++){
           const cell=sheet[XLSX.utils.encode_cell({r:range.s.r,c})];
-          if(cell)cell.s={fill:{patternType:'solid',fgColor:{rgb:'425C76'}},font:{bold:true,color:{rgb:'FFFFFF'}}};
+          if(cell)cell.s={fill:{patternType:'solid',fgColor:{rgb:'17365D'}},font:{bold:true,color:{rgb:'FFFFFF'}}};
         }
-        sheet['!cols']=Array.from({length:range.e.c+1},(_,i)=>({wch:Math.min(34,Math.max(12,...data.slice(0,80).map(row=>String(Object.values(row)[i]??'').length+2)))}));
+        sheet['!cols']=Array.from({length:range.e.c+1},(_,i)=>({wch:Math.min(42,Math.max(12,...data.slice(0,80).map(row=>String(Object.values(row)[i]??'').length+2)))}));
+        sheet['!autofilter']={ref:XLSX.utils.encode_range(range)};
+        sheet['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activePane:'bottomLeft',state:'frozen'};
       }
       XLSX.utils.book_append_sheet(wb,sheet,name.slice(0,31));
     });
+    const cables=Array.isArray(sampleData.Cable_Schedule)?sampleData.Cable_Schedule:[];
+    const generated=cables.filter(x=>String(x.Cable_ID||'').startsWith('SAMP-'));
+    const trunk=generated.filter(x=>String(x.Cable_ID).startsWith('SAMP-JB-')).length;
+    const drops=generated.filter(x=>String(x.Cable_ID).startsWith('SAMP-INS-')).length;
+    const summaryRows=[
+      ['Cable Scheduling Sample Workbook','Value'],
+      ['Workbook Status','ILLUSTRATIVE SAMPLE — NOT FOR CONSTRUCTION'],
+      ['Master Layout Source','ACAD Substation Layout Studio; generated/substation_layout.json when published'],
+      ['Drawing Source','generated/substation_layout.dxf when published; uploaded DWG/DXF files are reference-only until geometry extraction is implemented'],
+      ['Cable Schedule Records',cables.length],
+      ['Generated Sample Trunk Cables (PLC/RIO to JB)',trunk],
+      ['Generated Sample Instrument Drops (JB to Instrument)',drops],
+      ['Instrument Register Records',(sampleData.Instrument_Register||[]).length],
+      ['Junction Box Register Records',(sampleData.JB_Register||[]).length],
+      ['ECR Rule','Keep each ECR separate; an ECR with no layout inputs must remain blank for ECR-specific layout data'],
+      ['Engineering Caveat','Cable lengths are illustrative. Route IDs, tray IDs, cable size/specification and measured lengths require confirmation.'],
+      ['Next Step','Publish the approved ACAD layout, refresh Cable Scheduling, then validate endpoints, cable specifications, routes and tray allocations.']
+    ];
+    const summary=XLSX.utils.aoa_to_sheet(summaryRows);
+    summary['!cols']=[{wch:48},{wch:105}];
+    summary['!autofilter']={ref:'A1:B'+summaryRows.length};
+    summary['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activePane:'bottomLeft',state:'frozen'};
+    summaryRows.forEach((row,r)=>row.forEach((v,c)=>{const cell=summary[XLSX.utils.encode_cell({r,c})];if(!cell)return;cell.s={border:{top:{style:'thin',color:{rgb:'FFB7C9D6'}},bottom:{style:'thin',color:{rgb:'FFB7C9D6'}},left:{style:'thin',color:{rgb:'FFB7C9D6'}},right:{style:'thin',color:{rgb:'FFB7C9D6'}}},alignment:{vertical:'top',wrapText:true}};if(r===0)cell.s={...cell.s,fill:{patternType:'solid',fgColor:{rgb:'17365D'}},font:{bold:true,color:{rgb:'FFFFFF'}}};else if(r===1)cell.s={...cell.s,fill:{patternType:'solid',fgColor:{rgb:'FCE4D6'}},font:{bold:true,color:{rgb:'9C0006'}}};}));
+    XLSX.utils.book_append_sheet(wb,summary,'Sample Summary');
+    const readme=XLSX.utils.aoa_to_sheet([
+      ['ReadMe','Instructions'],
+      ['Purpose','Illustrates the Cable Scheduling app data structure and provisional cable generation.'],
+      ['Source of truth','ACAD Substation is the master for ECR layout data.'],
+      ['Drawing visibility','The embedded ACAD workspace can display the layout; downloading/viewing a DWG/DXF requires the generated file to be published.'],
+      ['Sample records','Rows marked ILLUSTRATIVE SAMPLE or PROVISIONAL SAMPLE are not approved engineering data.'],
+      ['Lengths','Sample lengths are placeholders, not routed or measured lengths.'],
+      ['Route and tray','Blank Route_ID and Tray_ID mean no approved route/tray assignment has been made.'],
+      ['Use','Replace illustrative data with approved project data and run validation before engineering issue.']
+    ]);
+    readme['!cols']=[{wch:28},{wch:105}];
+    XLSX.utils.book_append_sheet(wb,readme,'ReadMe');
     XLSX.writeFile(wb,'Cable_Scheduling_Sample_Data.xlsx');
   }
   document.getElementById('importExcelBtn').addEventListener('click',()=>document.getElementById('excelFile').click());
@@ -812,7 +850,11 @@ function loadSampleData(){
  }).join(''):'<tr><td colspan="6" class="empty">No data loaded. Import a workbook or load sample data.</td></tr>';
  document.querySelectorAll('#tiers .tier').forEach((row,i)=>{const t=trays[i];const width=t?Number(t.Width_mm):0,hasUsed=!!t&&t.Used_Width_mm!==undefined&&t.Used_Width_mm!==null&&String(t.Used_Width_mm).trim()!=='';const used=hasUsed?Number(t.Used_Width_mm):null;const occupancy=width>0&&hasUsed&&Number.isFinite(used)?Math.round(used/width*100):null;row.querySelector('.tier-fill').style.width=(occupancy===null?0:Math.min(100,occupancy))+'%';row.querySelector('span').textContent=occupancy===null?'Not Evaluated':occupancy+'%';});
  const notice=document.querySelector('#pageContent .notice');
- if(notice) notice.innerHTML='<strong>Data loaded.</strong> '+(trays.length?'Illustrative sample records are populated automatically. Tray occupancy shown here is calculated as entered used width ÷ tray width; other engineering checks remain pending.':'No active data. Import a workbook or load sample data.');
+  const cables=Array.isArray(sampleData.Cable_Schedule)?sampleData.Cable_Schedule:[];
+  const generated=cables.filter(x=>String(x.Cable_ID||'').startsWith('SAMP-'));
+  const trunk=generated.filter(x=>String(x.Cable_ID).startsWith('SAMP-JB-')).length;
+  const drops=generated.filter(x=>String(x.Cable_ID).startsWith('SAMP-INS-')).length;
+  if(notice) notice.innerHTML='<strong>Sample data loaded.</strong> '+cables.length+' total cable rows; '+trunk+' provisional PLC/RIO-to-JB trunks and '+drops+' provisional JB-to-instrument drops. '+(trays.length?'Tray occupancy is calculated only where used width and tray width are entered. ':'')+'Sample cable lengths are illustrative; routes, tray assignments and specifications still require confirmation.';
  runValidation();
 }
 function clearAllData(){
