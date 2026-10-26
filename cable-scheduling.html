@@ -360,7 +360,15 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
   function downloadWorkbook() {
     if(!window.XLSX){alert('Excel workbook library did not load. Check your internet connection and reload.');return;}
     const wb=XLSX.utils.book_new();
-    Object.entries(sampleData).forEach(([name,rows])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),name.slice(0,31)));
+    const templateHeaders={
+      Instrument_Register:['Instrument_Tag','Instrument_Type','Service','Signal_Type','PLC_RIO_Tag','JB_Tag','Cores_Required','Instrument_Cable_ID','Instrument_Cable_Cores','Cable_Category'],
+      JB_Register:['JB_Tag','PLC_RIO_Tag','Trunk_Cable_ID','Trunk_Cores','Location','Area','Remarks']
+    };
+    Object.entries(sampleData).forEach(([name,rows])=>{
+      const data=Array.isArray(rows)?rows:[];
+      const sheet=data.length?XLSX.utils.json_to_sheet(data):templateHeaders[name]?XLSX.utils.aoa_to_sheet([templateHeaders[name]]):XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb,sheet,name.slice(0,31));
+    });
     XLSX.writeFile(wb,'Cable_Scheduling_Sample_Data.xlsx');
   }
   document.getElementById('importExcelBtn').addEventListener('click',()=>document.getElementById('excelFile').click());
@@ -486,7 +494,7 @@ const sampleData = {
   {Route_ID:"R07",From:"COMM-01",To:"PLC-01",Segments:2},{Route_ID:"R08",From:"SAF-01",To:"FAN-01",Segments:3}
  ],
  Project_Settings: [{Setting:"Project_Name",Value:"Illustrative Steel Plant Substation"},{Setting:"Max_Tray_Tiers",Value:10},{Setting:"Spare_Capacity_Percent",Value:20},{Setting:"Data_Status",Value:"Illustrative only; verify before engineering use"}],
- Electrical_System_Config:[{Parameter:"33kV_Arrangement",Value:"Single and multiple switchboards supported"},{Parameter:"6.6kV_Arrangement",Value:"Two transformers / separate bus sections; variable arrangements also supported"},{Parameter:"Include_PCC",Value:"Yes"},{Parameter:"PMCC_to_multiple_IMCCs",Value:"Yes"},{Parameter:"IMCC_Operating_Rule",Value:"Configurable: exactly one incomer ON, other incomer OFF, bus coupler OFF where selected"},{Parameter:"Motor_Data",Value:"Tag, description, kW, voltage, current, starting method, source/destination, drive, duty/standby, redundancy"},{Parameter:"VFD_Cables",Value:"Separate input and output cable records"},{Parameter:"Spare_Feeders",Value:"Record spare feeders; generate cables only when required"},{Parameter:"Layout_Inputs",Value:"DWG/DXF reference, PDF, image/scan, Excel, coordinates, or mixture"},{Parameter:"Panel_Layout",Value:"Straight rows"},{Parameter:"Cable_Generation",Value:"Automatic provisional schedule from feeder register"},{Parameter:"Missing_Field_Display",Value:"Light red"}],Feeder_Register:[],Motor_Register:[],VFD_Register:[],Switchboard_Panels:[],Transformer_Register:[],PMCC_IMCC_Register:[],Panel_Layout:[],Power_Cable_Generation_Rules:[],Panel_Layout_Guide:[]
+ Electrical_System_Config:[{Parameter:"33kV_Arrangement",Value:"Single and multiple switchboards supported"},{Parameter:"6.6kV_Arrangement",Value:"Two transformers / separate bus sections; variable arrangements also supported"},{Parameter:"Include_PCC",Value:"Yes"},{Parameter:"PMCC_to_multiple_IMCCs",Value:"Yes"},{Parameter:"IMCC_Operating_Rule",Value:"Configurable: exactly one incomer ON, other incomer OFF, bus coupler OFF where selected"},{Parameter:"Motor_Data",Value:"Tag, description, kW, voltage, current, starting method, source/destination, drive, duty/standby, redundancy"},{Parameter:"VFD_Cables",Value:"Separate input and output cable records"},{Parameter:"Spare_Feeders",Value:"Record spare feeders; generate cables only when required"},{Parameter:"Layout_Inputs",Value:"DWG/DXF reference, PDF, image/scan, Excel, coordinates, or mixture"},{Parameter:"Panel_Layout",Value:"Straight rows"},{Parameter:"Cable_Generation",Value:"Automatic provisional schedule from feeder register"},{Parameter:"Missing_Field_Display",Value:"Light red"}],Feeder_Register:[],Motor_Register:[],VFD_Register:[],Switchboard_Panels:[],Transformer_Register:[],PMCC_IMCC_Register:[],Panel_Layout:[],Power_Cable_Generation_Rules:[],Panel_Layout_Guide:[],Instrument_Register:[],JB_Register:[]
 };
 let latestValidationResults=[];
 function runValidation(){
