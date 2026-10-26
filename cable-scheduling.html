@@ -362,6 +362,12 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
   document.getElementById('downloadSampleBtn').addEventListener('click', downloadWorkbook);
   function downloadWorkbook() {
     if(!window.XLSX){alert('Excel workbook library did not load. Check your internet connection and reload.');return;}
+    // The ACAD parent deliberately clears an unsaved ECR workspace on first sync.
+    // Build a temporary complete sample for this download, without altering that ECR workspace.
+    const workspaceSnapshot=JSON.parse(JSON.stringify(sampleData));
+    const rebuildSampleForDownload=!(sampleData.JB_Register||[]).length || !(sampleData.Instrument_Register||[]).length ||
+      !(sampleData.Equipment_Master||[]).some(x=>String(x.Equipment_ID||'').startsWith('ECR1-BAT-CHG-'));
+    if(rebuildSampleForDownload) buildExpandedSampleData();
     const wb=XLSX.utils.book_new();
     const templateHeaders={
       Instrument_Register:['Instrument_Tag','Instrument_Type','Service','Signal_Type','PLC_RIO_Tag','JB_Tag','Cores_Required','Instrument_Cable_ID','Instrument_Cable_Cores','Cable_Category','Field_Area','Field_Cable_Length_m','Data_Status'],
@@ -457,6 +463,11 @@ async function loadPublishedSubstationLayout(showAlert=false,suppliedPayload=nul
     readme['!cols']=[{wch:28},{wch:105}];
     XLSX.utils.book_append_sheet(wb,readme,'ReadMe');
     XLSX.writeFile(wb,'Cable_Scheduling_Sample_Data.xlsx');
+    // Restore the active ECR data exactly as it was before preparing the sample workbook.
+    if(rebuildSampleForDownload){
+      Object.keys(sampleData).forEach(key=>delete sampleData[key]);
+      Object.entries(workspaceSnapshot).forEach(([key,value])=>sampleData[key]=Array.isArray(value)?value:[]);
+    }
   }
   document.getElementById('importExcelBtn').addEventListener('click',()=>document.getElementById('excelFile').click());
   document.getElementById('drawingFile').addEventListener('change',async event=>{
