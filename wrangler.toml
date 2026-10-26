@@ -1,0 +1,7 @@
+name = "acad-substation-project-storage"
+main = "worker.js"
+compatibility_date = "2026-10-26"
+
+[[r2_buckets]]
+binding = "PROJECTS"
+bucket_name = "acad-substation-projects"
